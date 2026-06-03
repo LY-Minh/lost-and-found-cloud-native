@@ -1,0 +1,31 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: catalog-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - catalog-network
+
+  catalog-service:
+    build: .
+    container_name: catalog-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - MONGO_URI=mongodb://mongo:27017/catalog-db
+      - JWT_SECRET=lost-and-found-secret-key
+    depends_on:
+      - mongo
+    networks:
+      - catalog-network
+
+volumes:
+  mongo-data:
+
+networks:
+  catalog-network:
+    driver: bridge

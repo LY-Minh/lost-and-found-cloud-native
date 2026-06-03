@@ -1,0 +1,12 @@
+services:
+  api-gateway:
+    build: .
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - AUTH_SERVICE_URL=http://<AUTH_EC2_IP>:3001
+      - CATALOG_SERVICE_URL=http://<CATALOG_EC2_IP>:3002
+      - CLAIMS_SERVICE_URL=http://<CLAIMS_EC2_IP>:3003
+      - REPORT_SERVICE_URL=http://<REPORT_EC2_IP>:3004

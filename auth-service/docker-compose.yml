@@ -1,0 +1,31 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: auth-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - auth-network
+
+  auth-service:
+    build: .
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGO_URI=mongodb://mongo:27017/auth-db
+      - JWT_SECRET=lost-and-found-secret-key
+    depends_on:
+      - mongo
+    networks:
+      - auth-network
+
+volumes:
+  mongo-data:
+
+networks:
+  auth-network:
+    driver: bridge
