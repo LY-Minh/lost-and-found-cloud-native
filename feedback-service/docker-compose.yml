@@ -1,0 +1,30 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: feedback-mongo
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - feedback-network
+
+  feedback-service:
+    build: .
+    container_name: feedback-service
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+      - MONGO_URI=mongodb://mongo:27017/feedback-db
+    depends_on:
+      - mongo
+    networks:
+      - feedback-network
+
+volumes:
+  mongo-data:
+
+networks:
+  feedback-network:
+    driver: bridge

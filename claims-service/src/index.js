@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const claimRoutes = require('./routes/claims');
+const studentClaimRoutes = require('./routes/studentClaims');
+const adminClaimRoutes = require('./routes/adminClaims');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -12,7 +14,14 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+// Authenticated routes (any role) - Nginx validates token
 app.use('/claims', claimRoutes);
+
+// Student routes - Nginx enforces student role
+app.use('/student', studentClaimRoutes);
+
+// Admin routes - Nginx enforces admin role
+app.use('/admin', adminClaimRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

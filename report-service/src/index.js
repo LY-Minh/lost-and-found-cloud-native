@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const reportRoutes = require('./routes/reports');
+const adminReportRoutes = require('./routes/adminReports');
 
 const app = express();
 const PORT = process.env.PORT || 3004;
@@ -10,14 +10,15 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/report', reportRoutes);
+// Admin routes - Nginx enforces admin role
+app.use('/admin', adminReportRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'report-service' });
 });
 
-// Start server (no MongoDB needed)
+// Start server (no MongoDB needed - aggregates from other services)
 app.listen(PORT, () => {
   console.log(`Report Service running on port ${PORT}`);
 });

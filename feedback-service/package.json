@@ -1,7 +1,7 @@
 {
-  "name": "catalog-service",
+  "name": "feedback-service",
   "version": "1.0.0",
-  "description": "Catalog service for Lost & Found items",
+  "description": "Feedback service for Lost & Found system",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

@@ -6,16 +6,22 @@ const router = express.Router();
 const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || 'http://catalog-service:3002';
 const CLAIMS_SERVICE_URL = process.env.CLAIMS_SERVICE_URL || 'http://claims-service:3003';
 
-// Helper to forward auth header for internal requests
-const getAuthHeader = (req) => {
-  const authHeader = req.headers.authorization;
-  return authHeader ? { Authorization: authHeader } : {};
+// Helper to forward auth headers for internal service-to-service requests
+const getAuthHeaders = (req) => {
+  return {
+    'Authorization': req.headers.authorization || '',
+    'X-User-Id': req.headers['x-user-id'] || '',
+    'X-User-Email': req.headers['x-user-email'] || '',
+    'X-User-Role': req.headers['x-user-role'] || ''
+  };
 };
 
-// GET /report/total-items - Get total lost & found items
+// GET /admin/total-items - Get total lost & found items
 router.get('/total-items', async (req, res) => {
   try {
-    const response = await axios.get(`${CATALOG_SERVICE_URL}/items`);
+    const response = await axios.get(`${CATALOG_SERVICE_URL}/items`, {
+      headers: getAuthHeaders(req)
+    });
     const items = response.data;
 
     const totalLost = items.filter(item => item.status === 'lost').length;
@@ -31,11 +37,11 @@ router.get('/total-items', async (req, res) => {
   }
 });
 
-// GET /report/total-claims - Get total claim submissions
+// GET /admin/total-claims - Get total claim submissions
 router.get('/total-claims', async (req, res) => {
   try {
-    const response = await axios.get(`${CLAIMS_SERVICE_URL}/claims`, {
-      headers: getAuthHeader(req)
+    const response = await axios.get(`${CLAIMS_SERVICE_URL}/admin/claims`, {
+      headers: getAuthHeaders(req)
     });
     const claims = response.data;
 
@@ -47,11 +53,11 @@ router.get('/total-claims', async (req, res) => {
   }
 });
 
-// GET /report/pending-claims - Get all pending claims
+// GET /admin/pending-claims - Get all pending claims
 router.get('/pending-claims', async (req, res) => {
   try {
-    const response = await axios.get(`${CLAIMS_SERVICE_URL}/claims`, {
-      headers: getAuthHeader(req)
+    const response = await axios.get(`${CLAIMS_SERVICE_URL}/admin/claims`, {
+      headers: getAuthHeaders(req)
     });
     const claims = response.data;
     const pendingClaims = claims.filter(claim => claim.status === 'pending');
@@ -65,11 +71,11 @@ router.get('/pending-claims', async (req, res) => {
   }
 });
 
-// GET /report/claims-by-status - Claims grouped by status
+// GET /admin/claims-by-status - Claims grouped by status
 router.get('/claims-by-status', async (req, res) => {
   try {
-    const response = await axios.get(`${CLAIMS_SERVICE_URL}/claims`, {
-      headers: getAuthHeader(req)
+    const response = await axios.get(`${CLAIMS_SERVICE_URL}/admin/claims`, {
+      headers: getAuthHeaders(req)
     });
     const claims = response.data;
 

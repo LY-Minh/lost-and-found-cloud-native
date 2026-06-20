@@ -1,7 +1,7 @@
 {
-  "name": "api-gateway",
+  "name": "activity-log-service",
   "version": "1.0.0",
-  "description": "API Gateway for Lost & Found system",
+  "description": "Activity log service for Lost & Found system",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -10,7 +10,6 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "http-proxy-middleware": "^3.0.0",
-    "jsonwebtoken": "^9.0.2"
+    "mongoose": "^8.0.0"
   }
 }

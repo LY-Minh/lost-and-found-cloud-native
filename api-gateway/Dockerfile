@@ -1,13 +1,14 @@
-FROM node:18-alpine
+FROM nginx:alpine
 
-WORKDIR /app
+# Install njs module
+RUN apk add --no-cache nginx-mod-http-js
 
-COPY package*.json ./
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
-RUN npm install --production
+# Copy njs scripts
+COPY njs/ /etc/nginx/njs/
 
-COPY . .
+EXPOSE 80
 
-EXPOSE 3000
-
-CMD ["node", "src/index.js"]
+CMD ["nginx", "-g", "daemon off;"]
