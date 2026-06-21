@@ -1,9 +1,8 @@
 /**
  * njs script for JWT validation and Role-Based Access Control (RBAC).
  *
- * This script runs inside Nginx via the njs module. It decodes and validates
- * JWT tokens using HS256 + shared secret entirely on its own — no calls to
- * any external service.
+ * Uses only njs-compatible APIs for maximum compatibility with the
+ * nginx-mod-http-js package on Alpine.
  *
  * Access levels (determined by URL prefix):
  *   /auth/*       → Open (no token needed)
@@ -12,11 +11,15 @@
  *   Everything else → Valid token, any role
  */
 
-function jwt(data) {
-    var parts = data.split('.').slice(0, 2)
-        .map(v => Buffer.from(v, 'base64url').toString())
-        .map(JSON.parse);
-    return { header: parts[0], payload: parts[1] };
+function base64UrlDecode(str) {
+    // Convert base64url to standard base64
+    var b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    // Pad with '=' if needed
+    switch (b64.length % 4) {
+        case 2: b64 += '=='; break;
+        case 3: b64 += '='; break;
+    }
+    return Buffer.from(b64, 'base64').toString();
 }
 
 function verify(token, secret) {
@@ -37,7 +40,7 @@ function verify(token, secret) {
         throw new Error('Invalid signature');
     }
 
-    var payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    var payload = JSON.parse(base64UrlDecode(parts[1]));
 
     // Check expiration
     var now = Math.floor(Date.now() / 1000);
@@ -49,8 +52,10 @@ function verify(token, secret) {
 }
 
 function authenticate(r) {
-    var uri = r.uri;
-
+    // When called as a subrequest via auth_request, r.uri is
+    // "/auth-check".  The original URI is passed in the
+    // X-Original-URI header by the /auth-validate proxy block.
+    var uri = r.headersIn['X-Original-URI'] || r.uri;
     // /auth/* routes are open — no token needed
     if (uri.startsWith('/auth/')) {
         r.return(200);
@@ -109,3 +114,4 @@ function authenticate(r) {
 }
 
 export default { authenticate };
+

@@ -31,33 +31,35 @@
 3. Note down the **public IPs** and **private IPs** of all 4 instances:
 
 ```
-EC2-1 (Gateway + Auth):   Public IP: __________  Private IP: __________
-EC2-2 (Claims + Catalog):  Public IP: __________  Private IP: __________
-EC2-3 (Report + Catalog):  Public IP: __________  Private IP: __________
-EC2-4 (Profile + Feedback):Public IP: __________  Private IP: __________
+EC2-1 (Gateway + Auth):   Public IP: 35.175.197.76 Private IP: 172.31.16.94
+EC2-2 (Claims + Catalog):  Public IP: 3.87.155.0  Private IP: 172.31.20.227
+EC2-3 (Report + Catalog):  Public IP: 54.160.168.255  Private IP: 172.31.24.80
+EC2-4 (Profile + Feedback):Public IP: 3.90.162.10  Private IP: 172.31.22.100
 ```
 
 4. SSH into each instance and install Docker:
    ```bash
-   # Amazon Linux 2023
-   sudo dnf install -y docker
-   sudo systemctl enable --now docker
-   sudo usermod -aG docker ec2-user
-   # Log out and log back in
-   
-   # Install Docker Compose plugin
-   sudo dnf install -y docker-compose-plugin
-   # Verify
-   docker compose version
-   ```
+ sudo apt-get remove -y docker docker-engine docker.io containerd runc
+sudo apt-get purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+sudo rm -rf /var/lib/docker
+sudo rm -rf /var/lib/containerd
+sudo rm -f /etc/apt/sources.list.d/docker.list
+sudo rm -f /etc/apt/keyrings/docker.asc
 
-   ```bash
-   # Ubuntu 22.04
-   sudo apt update && sudo apt install -y docker.io docker-compose-v2
-   sudo systemctl enable --now docker
-   sudo usermod -aG docker ubuntu
-   # Log out and log back in
-   docker compose version
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo systemctl enable docker
+sudo systemctl start docker
+docker compose version
    ```
 
 ---

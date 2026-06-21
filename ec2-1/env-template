@@ -8,4 +8,4 @@ JWT_SECRET=lost-and-found-secret-key
 
 # MongoDB Atlas connection strings
 # AUTH_DB_URI: shared with profile-service on EC2-4 (Users collection)
-AUTH_DB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/auth-db?retryWrites=true&w=majority
+AUTH_DB_URI=mongodb+srv://ming:ming@auth-db.fdjpxon.mongodb.net/?appName=auth-db

@@ -40,7 +40,8 @@ echo -e "${GREEN}═════════════════════
 echo ""
 
 # ─── Pre-flight: check for placeholder IPs in nginx.conf ─────
-if grep -qE '(AUTH_SERVICE_IP|CLAIMS_SERVICE_IP|CATALOG_INSTANCE_[12]_IP|REPORT_SERVICE_IP|PROFILE_SERVICE_IP|FEEDBACK_SERVICE_IP)' api-gateway/nginx.conf 2>/dev/null; then
+# Only check actual upstream server lines (ignore comments)
+if grep -E '^\s*server\s' api-gateway/nginx.conf | grep -qE '(AUTH_SERVICE_IP|CLAIMS_SERVICE_IP|CATALOG_INSTANCE_[12]_IP|REPORT_SERVICE_IP|PROFILE_SERVICE_IP|FEEDBACK_SERVICE_IP)' 2>/dev/null; then
   echo -e "${YELLOW}⚠  WARNING: Placeholder IPs found in api-gateway/nginx.conf${NC}"
   echo -e "${YELLOW}   The api-gateway image will not route correctly until you${NC}"
   echo -e "${YELLOW}   replace them with real EC2 IPs.${NC}"
@@ -59,8 +60,8 @@ for entry in "${SERVICES[@]}"; do
   IFS='|' read -r name folder port <<< "$entry"
   tag="${DOCKER_USER}/${IMAGE_PREFIX}-${name}:latest"
 
-  echo -e "${GREEN}── Building ${tag} ──${NC}"
-  docker build -t "$tag" "$folder/"
+  echo -e "${GREEN}── Building ${tag} (linux/amd64) ──${NC}"
+  docker build --platform linux/amd64 -t "$tag" "$folder/"
   echo -e "${GREEN}✓ Built ${tag}${NC}"
   echo ""
 

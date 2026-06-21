@@ -6,7 +6,7 @@
   "variable": [
     {
       "key": "BASE_URL",
-      "value": "http://YOUR_EC2_1_PUBLIC_IP"
+      "value": "http://35.175.197.76"
     },
     {
       "key": "STUDENT_TOKEN",
@@ -14,6 +14,10 @@
     },
     {
       "key": "ADMIN_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ITEM_ID",
       "value": ""
     }
   ],
@@ -26,7 +30,7 @@
         "url": "{{BASE_URL}}/auth/register",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"John Student\",\n  \"email\": \"john@student.com\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
+          "raw": "{\n  \"name\": \"Alice Student\",\n  \"email\": \"alice@student.com\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
         }
       },
       "event": [
@@ -46,7 +50,7 @@
         "url": "{{BASE_URL}}/auth/register",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@school.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
+          "raw": "{\n  \"name\": \"Bob Admin\",\n  \"email\": \"bob@admin.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
         }
       },
       "event": [
@@ -66,7 +70,7 @@
         "url": "{{BASE_URL}}/auth/login",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"john@student.com\",\n  \"password\": \"password123\"\n}"
+          "raw": "{\n  \"email\": \"alice@student.com\",\n  \"password\": \"password123\"\n}"
         }
       },
       "event": [
@@ -86,7 +90,7 @@
         "url": "{{BASE_URL}}/auth/login",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"admin@school.com\",\n  \"password\": \"password123\"\n}"
+          "raw": "{\n  \"email\": \"bob@admin.com\",\n  \"password\": \"password123\"\n}"
         }
       },
       "event": [
@@ -111,7 +115,15 @@
           "mode": "raw",
           "raw": "{\n  \"title\": \"Blue Water Bottle\",\n  \"description\": \"Found near library entrance\",\n  \"category\": \"accessory\",\n  \"status\": \"found\",\n  \"location\": \"Library\"\n}"
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["var json = pm.response.json();", "if (json.item && json.item._id) { pm.collectionVariables.set('ITEM_ID', json.item._id); }"]
+          }
+        }
+      ]
     },
     {
       "name": "6. Get All Items",
@@ -140,7 +152,7 @@
         "url": "{{BASE_URL}}/student/update",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"John Updated Name\"\n}"
+          "raw": "{\n  \"name\": \"Alice Updated\"\n}"
         }
       }
     },
@@ -155,7 +167,7 @@
         "url": "{{BASE_URL}}/student/submit-claim",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"itemId\": \"PASTE_ITEM_ID_HERE\",\n  \"message\": \"This is my water bottle\"\n}"
+          "raw": "{\n  \"itemId\": \"{{ITEM_ID}}\",\n  \"message\": \"This is my water bottle\"\n}"
         }
       }
     },
@@ -215,27 +227,55 @@
       }
     },
     {
-      "name": "16. LOAD BALANCING — Hit /health 5x",
+      "name": "16. LOAD BALANCING — Get Items 5x",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "url": "{{BASE_URL}}/items"
+      }
+    },
+    {
+      "name": "T1. Wrong Password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{BASE_URL}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"alice@student.com\",\n  \"password\": \"wrongpassword\"\n}"
+        }
+      }
+    },
+    {
+      "name": "T2. Invalid Token",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer invalidtoken123" }],
+        "url": "{{BASE_URL}}/items"
+      }
+    },
+    {
+      "name": "T3. No Token",
       "request": {
         "method": "GET",
         "url": "{{BASE_URL}}/items"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "// NOTE: /items goes through catalog_backend which is load-balanced.",
-              "// To see which instance responded, check the Nginx access logs",
-              "// on EC2-1, or SSH into each catalog instance and check their logs.",
-              "",
-              "// Alternative: hit each catalog instance's /health directly:",
-              "//   http://<EC2-2_IP>:3002/health  → instance: catalog-instance-1",
-              "//   http://<EC2-3_IP>:3002/health  → instance: catalog-instance-2"
-            ]
-          }
-        }
-      ]
+      }
+    },
+    {
+      "name": "T4. Student Accessing Admin Route",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "url": "{{BASE_URL}}/admin/claims"
+      }
+    },
+    {
+      "name": "T5. Admin Accessing Student Route",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "url": "{{BASE_URL}}/student/me"
+      }
     }
   ]
 }

@@ -9,10 +9,10 @@ set -e
 cd "$(dirname "$0")"
 
 echo "=== Pulling latest images ==="
-docker compose pull
+sudo docker compose pull
 
 echo "=== Restarting containers ==="
-docker compose up -d --remove-orphans
+sudo docker compose up -d --remove-orphans
 
 echo "=== Status ==="
-docker compose ps
+sudo docker compose ps

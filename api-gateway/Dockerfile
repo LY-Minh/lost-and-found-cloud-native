@@ -1,7 +1,7 @@
-FROM nginx:alpine
+FROM alpine:3.20
 
-# Install njs module
-RUN apk add --no-cache nginx-mod-http-js
+# Install nginx + njs module from the same repo (versions match)
+RUN apk add --no-cache nginx nginx-mod-http-js
 
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
@@ -11,7 +11,6 @@ COPY njs/ /etc/nginx/njs/
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -q --spider http://localhost/health || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
 
