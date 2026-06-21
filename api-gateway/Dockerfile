@@ -11,4 +11,7 @@ COPY njs/ /etc/nginx/njs/
 
 EXPOSE 80
 
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -q --spider http://localhost/health || exit 1
+
 CMD ["nginx", "-g", "daemon off;"]
+

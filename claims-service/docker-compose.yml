@@ -1,20 +1,10 @@
-services:
-  mongo:
-    image: mongo:7
-    container_name: claims-mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - claims-network
-
   claims-service:
     build: .
     container_name: claims-service
     ports:
       - "3003:3003"
     environment:
+      - NODE_ENV=production
       - PORT=3003
       - MONGO_URI=mongodb://mongo:27017/claims-db
       - JWT_SECRET=lost-and-found-secret-key
@@ -29,3 +19,4 @@ volumes:
 networks:
   claims-network:
     driver: bridge
+

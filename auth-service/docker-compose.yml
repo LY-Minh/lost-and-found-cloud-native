@@ -1,4 +1,3 @@
-services:
   mongo:
     image: mongo:7
     container_name: auth-mongo
@@ -15,6 +14,7 @@ services:
     ports:
       - "3001:3001"
     environment:
+      - NODE_ENV=production
       - PORT=3001
       - MONGO_URI=mongodb://mongo:27017/auth-db
       - JWT_SECRET=lost-and-found-secret-key
@@ -29,3 +29,4 @@ volumes:
 networks:
   auth-network:
     driver: bridge
+

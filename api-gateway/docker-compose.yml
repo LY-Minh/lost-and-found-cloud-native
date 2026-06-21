@@ -1,8 +1,10 @@
-services:
   api-gateway:
     build: .
     container_name: api-gateway
     ports:
       - "80:80"
     environment:
+      - NODE_ENV=production
       - JWT_SECRET=lost-and-found-secret-key
+    restart: unless-stopped
+

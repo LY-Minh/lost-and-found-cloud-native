@@ -7,6 +7,7 @@ services:
     ports:
       - "3003:3003"
     environment:
+      - NODE_ENV=production
       - PORT=3003
       - MONGO_URI=${CLAIMS_DB_URI}
       - JWT_SECRET=${JWT_SECRET}
@@ -18,7 +19,10 @@ services:
     ports:
       - "3002:3002"
     environment:
+      - NODE_ENV=production
       - PORT=3002
       - MONGO_URI=${CATALOG_DB_URI}
       - JWT_SECRET=${JWT_SECRET}
+      - INSTANCE_ID=catalog-instance-1
     restart: unless-stopped
+

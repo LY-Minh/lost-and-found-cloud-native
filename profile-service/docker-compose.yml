@@ -1,0 +1,11 @@
+services:
+  profile-service:
+    build: .
+    container_name: profile-service
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - MONGO_URI=mongodb://mongo:27017/auth-db
+    restart: unless-stopped

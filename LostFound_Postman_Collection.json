@@ -1,0 +1,241 @@
+{
+  "info": {
+    "name": "Lost & Found API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://YOUR_EC2_1_PUBLIC_IP"
+    },
+    {
+      "key": "STUDENT_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_TOKEN",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Register Student",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{BASE_URL}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Student\",\n  \"email\": \"john@student.com\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('STUDENT_TOKEN', json.token);"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Register Admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{BASE_URL}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@school.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('ADMIN_TOKEN', json.token);"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Login Student",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{BASE_URL}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@student.com\",\n  \"password\": \"password123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('STUDENT_TOKEN', json.token);"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{BASE_URL}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@school.com\",\n  \"password\": \"password123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('ADMIN_TOKEN', json.token);"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Create Item (Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }
+        ],
+        "url": "{{BASE_URL}}/admin/items",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Blue Water Bottle\",\n  \"description\": \"Found near library entrance\",\n  \"category\": \"accessory\",\n  \"status\": \"found\",\n  \"location\": \"Library\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Get All Items",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "url": "{{BASE_URL}}/items"
+      }
+    },
+    {
+      "name": "7. Get My Profile (Student)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "url": "{{BASE_URL}}/student/me"
+      }
+    },
+    {
+      "name": "8. Update My Profile (Student)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }
+        ],
+        "url": "{{BASE_URL}}/student/update",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Updated Name\"\n}"
+        }
+      }
+    },
+    {
+      "name": "9. Submit Claim (Student)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }
+        ],
+        "url": "{{BASE_URL}}/student/submit-claim",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemId\": \"PASTE_ITEM_ID_HERE\",\n  \"message\": \"This is my water bottle\"\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Submit Feedback (Student)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }
+        ],
+        "url": "{{BASE_URL}}/student/submit-feedback",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"Great lost and found system!\"\n}"
+        }
+      }
+    },
+    {
+      "name": "11. Get All Claims (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "url": "{{BASE_URL}}/admin/claims"
+      }
+    },
+    {
+      "name": "12. Total Items Report (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "url": "{{BASE_URL}}/admin/total-items"
+      }
+    },
+    {
+      "name": "13. Total Claims Report (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "url": "{{BASE_URL}}/admin/total-claims"
+      }
+    },
+    {
+      "name": "14. Claims by Status (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "url": "{{BASE_URL}}/admin/claims-by-status"
+      }
+    },
+    {
+      "name": "15. Get All Feedback (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "url": "{{BASE_URL}}/admin/feedback"
+      }
+    },
+    {
+      "name": "16. LOAD BALANCING — Hit /health 5x",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/items"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// NOTE: /items goes through catalog_backend which is load-balanced.",
+              "// To see which instance responded, check the Nginx access logs",
+              "// on EC2-1, or SSH into each catalog instance and check their logs.",
+              "",
+              "// Alternative: hit each catalog instance's /health directly:",
+              "//   http://<EC2-2_IP>:3002/health  → instance: catalog-instance-1",
+              "//   http://<EC2-3_IP>:3002/health  → instance: catalog-instance-2"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

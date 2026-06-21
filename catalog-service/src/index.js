@@ -7,6 +7,7 @@ const adminItemRoutes = require('./routes/adminItems');
 const app = express();
 const PORT = process.env.PORT || 3002;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/catalog-db';
+const INSTANCE_ID = process.env.INSTANCE_ID || 'unknown';
 
 // Middleware
 app.use(cors());
@@ -19,9 +20,9 @@ app.use('/items', itemRoutes);
 // Admin routes - Nginx enforces admin role
 app.use('/admin/items', adminItemRoutes);
 
-// Health check
+// Health check — includes INSTANCE_ID for load-balancing verification
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'catalog-service' });
+  res.json({ status: 'ok', service: 'catalog-service', instance: INSTANCE_ID });
 });
 
 // Connect to MongoDB and start server
@@ -36,3 +37,4 @@ mongoose.connect(MONGO_URI)
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
+
