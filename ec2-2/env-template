@@ -1,0 +1,11 @@
+# ─────────────────────────────────────────────────────────────
+# EC2-2 environment variables
+# Copy this file to .env and fill in your MongoDB Atlas credentials
+#   cp env-template .env
+# ─────────────────────────────────────────────────────────────
+# Shared JWT secret — MUST match all other EC2 instances
+JWT_SECRET=lost-and-found-secret-key
+
+# MongoDB Atlas connection strings
+CLAIMS_DB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/claims-db?retryWrites=true&w=majority
+CATALOG_DB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/catalog-db?retryWrites=true&w=majority

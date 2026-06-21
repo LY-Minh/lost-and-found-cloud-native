@@ -1,7 +1,7 @@
 {
-  "name": "activity-log-service",
+  "name": "profile-service",
   "version": "1.0.0",
-  "description": "Activity log service for Lost & Found system",
+  "description": "Profile service for Lost & Found system - manages student profiles",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

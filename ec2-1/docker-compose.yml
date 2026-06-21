@@ -1,0 +1,22 @@
+# EC2-1: api-gateway + auth-service
+# ─────────────────────────────────────────────────────────────
+services:
+  api-gateway:
+    image: jinn2/lostfound-api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "80:80"
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+    restart: unless-stopped
+
+  auth-service:
+    image: jinn2/lostfound-auth-service:latest
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGO_URI=${AUTH_DB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    restart: unless-stopped
