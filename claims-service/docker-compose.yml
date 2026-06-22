@@ -1,3 +1,4 @@
+services:
   claims-service:
     build: .
     container_name: claims-service
@@ -19,4 +20,3 @@ volumes:
 networks:
   claims-network:
     driver: bridge
-
