@@ -6,7 +6,7 @@
 # ==============================================================================
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-KEY_PATH="$HOME/.ssh/your-aws-key.pem"
+KEY_PATH="./midterm.pem"
 SSH_USER="ubuntu" # Change to 'ec2-user' if running Amazon Linux
 
 # List of folders to deploy
@@ -15,10 +15,10 @@ FOLDERS=("ec2-1" "ec2-2" "ec2-3" "ec2-4")
 # Function to get IP for a given folder
 get_ip() {
     case $1 in
-        "ec2-1") echo "YOUR_EC2_1_PUBLIC_IP" ;;
-        "ec2-2") echo "YOUR_EC2_2_PUBLIC_IP" ;;
-        "ec2-3") echo "YOUR_EC2_3_PUBLIC_IP" ;;
-        "ec2-4") echo "YOUR_EC2_4_PUBLIC_IP" ;;
+        "ec2-1") echo "98.88.29.130" ;;
+        "ec2-2") echo "54.198.99.65" ;;
+        "ec2-3") echo "54.172.23.237" ;;
+        "ec2-4") echo "18.204.231.192" ;;
     esac
 }
 

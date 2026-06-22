@@ -12,5 +12,5 @@ CATALOG_DB_URI=mongodb+srv://ming:ming@catalog-db.69st1lo.mongodb.net/?appName=c
 # Report-service calls claims-service on EC2-2 (catalog-service is
 # co-located and reached via Docker internal DNS, no config needed).
 # Use EC2-2's private IP if in the same VPC, otherwise public IP.
-CLAIMS_SERVICE_URL=http://172.31.20.227:3003
+CLAIMS_SERVICE_URL=http://172.31.28.229:3003
 
