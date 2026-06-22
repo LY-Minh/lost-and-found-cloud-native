@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 
-// Reuse the same User schema as auth-service (without password hashing hooks
-// since this service only reads/updates name and never writes passwords).
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
