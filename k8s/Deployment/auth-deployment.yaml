@@ -1,0 +1,66 @@
+# AUTH SERVICE
+# Handles user registration, login, and JWT token generation
+# Port: 3000
+# Ingress path: /auth
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: auth-deployment
+  labels:
+    app: auth
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: auth
+
+  template:
+    metadata:
+      labels:
+        app: auth
+
+    spec:
+      containers:
+        - name: auth-container
+          image: smanith/auth-service:v1.0      #change this
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3000
+
+          # Environment variables from Kubernetes Secret
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: MONGO_URI
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: JWT_SECRET
+
+            - name: PORT
+              value: "3000"
+
+          # Liveness probe — restarts container if app crashes
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          # Readiness probe — only sends traffic when app is ready
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5

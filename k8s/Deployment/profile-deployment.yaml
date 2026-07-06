@@ -1,0 +1,63 @@
+# PROFILE SERVICE
+# Handles user profile management
+# Port: 3004
+# Ingress path: /profile
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: profile-deployment
+  labels:
+    app: profile
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: profile
+
+  template:
+    metadata:
+      labels:
+        app: profile
+
+    spec:
+      containers:
+        - name: profile-container
+          image: smanith/profile-service:v1.0      #change this
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3004
+
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: profile-secret
+                  key: MONGO_URI
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: profile-secret
+                  key: JWT_SECRET
+
+            - name: PORT
+              value: "3004"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 5
+            periodSeconds: 5

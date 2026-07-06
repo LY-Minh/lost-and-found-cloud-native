@@ -1,0 +1,63 @@
+# REPORT SERVICE
+# Handles item reports — users report suspicious listings
+# Port: 3003
+# Ingress path: /report
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: report-deployment
+  labels:
+    app: report
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: report
+
+  template:
+    metadata:
+      labels:
+        app: report
+
+    spec:
+      containers:
+        - name: report-container
+          image: smanith/report-service:v1.0      #change this
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3003
+
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: report-secret
+                  key: MONGO_URI
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: report-secret
+                  key: JWT_SECRET
+
+            - name: PORT
+              value: "3003"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 5

@@ -1,0 +1,63 @@
+# FEEDBACK SERVICE 
+# Handles user feedback and reviews
+# Port: 3005
+# Ingress path: /feedback
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: feedback-deployment
+  labels:
+    app: feedback
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: feedback
+
+  template:
+    metadata:
+      labels:
+        app: feedback
+
+    spec:
+      containers:
+        - name: feedback-container
+          image: smanith/feedback-service:v1.0      #change this
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3005
+
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: feedback-secret
+                  key: MONGO_URI
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: feedback-secret
+                  key: JWT_SECRET
+
+            - name: PORT
+              value: "3005"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 5
+            periodSeconds: 5
