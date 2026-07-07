@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: feedback-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: feedback
+  ports:
+    - name: http
+      port: 3005
+      targetPort: 3005
