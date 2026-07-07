@@ -1,63 +1,64 @@
-# FEEDBACK SERVICE 
+# FEEDBACK SERVICE
 # Handles user feedback and reviews
 # Port: 3005
 # Ingress path: /feedback
-
 apiVersion: apps/v1
+
 kind: Deployment
 
 metadata:
-  name: feedback-deployment
+  name: feedback-deployment       # Name of this Deployment
   labels:
-    app: feedback
+    app: feedback                 # Label used to identify this deployment
 
 spec:
-  replicas: 1
-
+  replicas: 1                     # Only 1 pod — no load balancing needed
+  
   selector:
     matchLabels:
-      app: feedback
-
+      app: feedback                # Tells Kubernetes which pods belong to this deployment
+  
   template:
     metadata:
       labels:
-        app: feedback
-
+        app: feedback               # Applied to every pod created from this template
+   
     spec:
       containers:
         - name: feedback-container
           image: smanith/feedback-service:v1.0      #change this
-          imagePullPolicy: IfNotPresent
-
+         
+          imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
+         
           ports:
-            - containerPort: 3005
-
-          env:
+            - containerPort: 3005           # Port the app listens on inside the container
+         
+          env:                              # Environment variables injected into the container
             - name: MONGO_URI
               valueFrom:
-                secretKeyRef:
+                secretKeyRef:                 # Pulled securely from a Kubernetes Secret, not hardcoded
                   name: feedback-secret
                   key: MONGO_URI
-
+           
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: feedback-secret
                   key: JWT_SECRET
-
+          
             - name: PORT
-              value: "3005"
-
-          livenessProbe:
+              value: "3005"                   # Plain value since port isn't sensitive
+          
+          livenessProbe:        # Restarts container if it becomes unhealthy
+            httpGet:
+              path: /health                   # Health check endpoint the app must expose
+              port: 3005  
+            initialDelaySeconds: 10           # Wait 10s after startup before first check    
+            periodSeconds: 10                 # Repeat check every 10s
+         
+          readinessProbe:       # Controls whether traffic is routed to this pod
             httpGet:
               path: /health
               port: 3005
-            initialDelaySeconds: 10
-            periodSeconds: 10
-
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 3005
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            initialDelaySeconds: 5            # Wait 5s before first readiness check
+            periodSeconds: 5                  # Repeat check every 5s

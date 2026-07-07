@@ -1,0 +1,17 @@
+# PERSISTENT VOLUME CLAIM
+# Pods use this to request access to the Persistent Volume
+# All pods that need shared logs reference this PVC
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: shared-logs-pvc       # Referenced by all deployment files
+
+spec:
+  accessModes:
+    - ReadWriteMany           # Must match PV accessModes
+
+  resources:
+    requests:
+      storage: 1Gi            # Must match or be less than PV capacity

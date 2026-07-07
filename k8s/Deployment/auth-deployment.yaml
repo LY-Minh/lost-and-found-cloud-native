@@ -2,65 +2,66 @@
 # Handles user registration, login, and JWT token generation
 # Port: 3000
 # Ingress path: /auth
-
 apiVersion: apps/v1
+
 kind: Deployment
 
 metadata:
-  name: auth-deployment
+  name: auth-deployment           # Name of this Deployment
   labels:
-    app: auth
+    app: auth                     # Label used to identify this deployment
 
 spec:
-  replicas: 1
-
+  replicas: 1                     # Only 1 pod — no load balancing needed for Auth
+  
   selector:
     matchLabels:
-      app: auth
-
+      app: auth                    # Tells Kubernetes which pods belong to this deployment
+ 
   template:
     metadata:
       labels:
-        app: auth
-
+        app: auth                   # Applied to every pod created from this template
+   
     spec:
       containers:
         - name: auth-container
           image: smanith/auth-service:v1.0      #change this
-          imagePullPolicy: IfNotPresent
-
+       
+          imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
+        
           ports:
-            - containerPort: 3000
-
+            - containerPort: 3000           # Port the app listens on inside the container
+      
           # Environment variables from Kubernetes Secret
           env:
             - name: MONGO_URI
               valueFrom:
-                secretKeyRef:
+                secretKeyRef:                 # Pulled securely from a Kubernetes Secret, not hardcoded
                   name: auth-secret
                   key: MONGO_URI
-
+         
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: auth-secret
                   key: JWT_SECRET
-
+         
             - name: PORT
-              value: "3000"
-
+              value: "3000"                   # Plain value since port isn't sensitive
+       
           # Liveness probe — restarts container if app crashes
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health                   # Health check endpoint the app must expose
               port: 3000
-            initialDelaySeconds: 10
-            periodSeconds: 10
-
+            initialDelaySeconds: 10           # Wait 10s after startup before first check
+            periodSeconds: 10                 # Repeat check every 10s
+        
           # Readiness probe — only sends traffic when app is ready
           readinessProbe:
             httpGet:
               path: /health
               port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            initialDelaySeconds: 5            # Wait 5s before first readiness check
+            periodSeconds: 5                  # Repeat check every 5s
