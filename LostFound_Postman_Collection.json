@@ -26,18 +26,26 @@
       "name": "1. Register Student",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": "{{BASE_URL}}/auth/register",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Alice Student\",\n  \"email\": \"alice@student.com\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
+          "raw": "{\n  \"name\": \"Vireak Student\",\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"backend_pass456\",\n  \"role\": \"student\"\n}"
         }
       },
       "event": [
         {
           "listen": "test",
           "script": {
-            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('STUDENT_TOKEN', json.token);"]
+            "exec": [
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('STUDENT_TOKEN', json.token);"
+            ]
           }
         }
       ]
@@ -46,18 +54,26 @@
       "name": "2. Register Admin",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": "{{BASE_URL}}/auth/register",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Bob Admin\",\n  \"email\": \"bob@admin.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
+          "raw": "{\n  \"name\": \"Chanda Admin\",\n  \"email\": \"chanda.admin@university.edu.kh\",\n  \"password\": \"backend_pass456\",\n  \"role\": \"admin\"\n}"
         }
       },
       "event": [
         {
           "listen": "test",
           "script": {
-            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('ADMIN_TOKEN', json.token);"]
+            "exec": [
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('ADMIN_TOKEN', json.token);"
+            ]
           }
         }
       ]
@@ -66,18 +82,26 @@
       "name": "3. Login Student",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": "{{BASE_URL}}/auth/login",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"alice@student.com\",\n  \"password\": \"password123\"\n}"
+          "raw": "{\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"backend_pass456\"\n}"
         }
       },
       "event": [
         {
           "listen": "test",
           "script": {
-            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('STUDENT_TOKEN', json.token);"]
+            "exec": [
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('STUDENT_TOKEN', json.token);"
+            ]
           }
         }
       ]
@@ -86,18 +110,26 @@
       "name": "4. Login Admin",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": "{{BASE_URL}}/auth/login",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"bob@admin.com\",\n  \"password\": \"password123\"\n}"
+          "raw": "{\n  \"email\": \"chanda.admin@university.edu.kh\",\n  \"password\": \"backend_pass456\"\n}"
         }
       },
       "event": [
         {
           "listen": "test",
           "script": {
-            "exec": ["var json = pm.response.json();", "pm.collectionVariables.set('ADMIN_TOKEN', json.token);"]
+            "exec": [
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set('ADMIN_TOKEN', json.token);"
+            ]
           }
         }
       ]
@@ -107,20 +139,29 @@
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
         ],
         "url": "{{BASE_URL}}/admin/items",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"title\": \"Blue Water Bottle\",\n  \"description\": \"Found near library entrance\",\n  \"category\": \"accessory\",\n  \"status\": \"found\",\n  \"location\": \"Library\"\n}"
+          "raw": "{\n  \"title\": \"Physical Copy of Xenoblade Chronicles 3\",\n  \"description\": \"Found a physical JRPG game cartridge without the box, left near the university library computer area.\",\n  \"category\": \"entertainment\",\n  \"status\": \"found\",\n  \"location\": \"Library Computer Area\"\n}"
         }
       },
       "event": [
         {
           "listen": "test",
           "script": {
-            "exec": ["var json = pm.response.json();", "if (json.item && json.item._id) { pm.collectionVariables.set('ITEM_ID', json.item._id); }"]
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.item && json.item._id) { pm.collectionVariables.set('ITEM_ID', json.item._id); }"
+            ]
           }
         }
       ]
@@ -129,7 +170,12 @@
       "name": "6. Get All Items",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{STUDENT_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/items"
       }
     },
@@ -137,7 +183,12 @@
       "name": "7. Get My Profile (Student)",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{STUDENT_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/student/me"
       }
     },
@@ -146,13 +197,19 @@
       "request": {
         "method": "PUT",
         "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{STUDENT_TOKEN}}"
+          }
         ],
         "url": "{{BASE_URL}}/student/update",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"Alice Updated\"\n}"
+          "raw": "{\n  \"name\": \"Vireak (Updated)\"\n}"
         }
       }
     },
@@ -161,13 +218,19 @@
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{STUDENT_TOKEN}}"
+          }
         ],
         "url": "{{BASE_URL}}/student/submit-claim",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"itemId\": \"{{ITEM_ID}}\",\n  \"message\": \"This is my water bottle\"\n}"
+          "raw": "{\n  \"itemId\": \"{{ITEM_ID}}\",\n  \"message\": \"This is my game! I prefer physical copies for long-term preservation and must have dropped it while studying.\"\n}"
         }
       }
     },
@@ -176,13 +239,19 @@
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{STUDENT_TOKEN}}"
+          }
         ],
         "url": "{{BASE_URL}}/student/submit-feedback",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"message\": \"Great lost and found system!\"\n}"
+          "raw": "{\n  \"message\": \"The Express backend handles these claims really fast. Great job on the centralized system!\"\n}"
         }
       }
     },
@@ -190,7 +259,12 @@
       "name": "11. Get All Claims (Admin)",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/admin/claims"
       }
     },
@@ -198,7 +272,12 @@
       "name": "12. Total Items Report (Admin)",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/admin/total-items"
       }
     },
@@ -206,7 +285,12 @@
       "name": "13. Total Claims Report (Admin)",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/admin/total-claims"
       }
     },
@@ -214,7 +298,12 @@
       "name": "14. Claims by Status (Admin)",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/admin/claims-by-status"
       }
     },
@@ -222,7 +311,12 @@
       "name": "15. Get All Feedback (Admin)",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/admin/feedback"
       }
     },
@@ -230,7 +324,12 @@
       "name": "16. LOAD BALANCING — Get Items 5x",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{STUDENT_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/items"
       }
     },
@@ -238,11 +337,16 @@
       "name": "T1. Wrong Password",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": "{{BASE_URL}}/auth/login",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"alice@student.com\",\n  \"password\": \"wrongpassword\"\n}"
+          "raw": "{\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"wrong_password_attempt\"\n}"
         }
       }
     },
@@ -250,7 +354,12 @@
       "name": "T2. Invalid Token",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer invalidtoken123" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer invalidtoken123"
+          }
+        ],
         "url": "{{BASE_URL}}/items"
       }
     },
@@ -265,7 +374,12 @@
       "name": "T4. Student Accessing Admin Route",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{STUDENT_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{STUDENT_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/admin/claims"
       }
     },
@@ -273,7 +387,12 @@
       "name": "T5. Admin Accessing Student Route",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ADMIN_TOKEN}}"
+          }
+        ],
         "url": "{{BASE_URL}}/student/me"
       }
     }

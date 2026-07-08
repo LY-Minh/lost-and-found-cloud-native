@@ -15,10 +15,10 @@ FOLDERS=("ec2-1" "ec2-2" "ec2-3" "ec2-4")
 # Function to get IP for a given folder
 get_ip() {
     case $1 in
-        "ec2-1") echo "98.88.29.130" ;;
-        "ec2-2") echo "54.198.99.65" ;;
-        "ec2-3") echo "54.172.23.237" ;;
-        "ec2-4") echo "18.204.231.192" ;;
+        "ec2-1") echo "54.167.37.182" ;;
+        "ec2-2") echo "3.95.198.126" ;;
+        "ec2-3") echo "3.91.7.236" ;;
+        "ec2-4") echo "3.94.116.44" ;;
     esac
 }
 
