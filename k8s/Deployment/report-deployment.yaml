@@ -1,0 +1,65 @@
+# REPORT SERVICE
+# Handles item reports — users report suspicious listings
+# Port: 3003
+# Ingress path: /report
+
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: report-deployment         # Name of this Deployment
+  labels:
+    app: report                   # Label used to identify this deployment
+
+spec:
+  replicas: 1                     # Only 1 pod — no load balancing needed
+  
+  selector:
+    matchLabels:
+      app: report                  # Tells Kubernetes which pods belong to this deployment
+  
+  template:
+    metadata:
+      labels:
+        app: report                 # Applied to every pod created from this template
+  
+    spec:
+      containers:
+        - name: report-container
+          image: smanith/report-service:v1.0      #change this
+        
+          imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
+         
+          ports:
+            - containerPort: 3003           # Port the app listens on inside the container
+         
+          env:                              # Environment variables injected into the container
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:                 # Pulled securely from a Kubernetes Secret, not hardcoded
+                  name: report-secret
+                  key: MONGO_URI
+            
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: report-secret
+                  key: JWT_SECRET
+            
+            - name: PORT
+              value: "3003"                   # Plain value since port isn't sensitive
+         
+          livenessProbe:        # Restarts container if it becomes unhealthy
+            httpGet:
+              path: /health                   # Health check endpoint the app must expose
+              port: 3003
+            initialDelaySeconds: 10           # Wait 10s after startup before first check
+            periodSeconds: 10                 # Repeat check every 10s
+          
+          readinessProbe:       # Controls whether traffic is routed to this pod
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 5            # Wait 5s before first readiness check
+            periodSeconds: 5                  # Repeat check every 5s

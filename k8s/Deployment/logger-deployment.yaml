@@ -1,0 +1,51 @@
+# LOGGER SERVICE
+# Reads shared logs written by Catalog and Claims services
+# No Ingress path — internal only, not exposed to external traffic
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: logger-deployment          # Name of this Deployment
+  labels:
+    app: logger                    # Label used to identify this deployment
+
+spec:
+  replicas: 1                      # Only 1 pod — just reads/monitors logs
+  
+  selector:
+    matchLabels:
+      app: logger                   # Tells Kubernetes which pods belong to this deployment
+  
+  template:
+    metadata:
+      labels:
+        app: logger                  # Applied to every pod created from this template
+   
+    spec:
+      # Shared PERSISTENT VOLUME — same PVC used by Catalog and Claims
+      volumes:
+        - name: shared-logs
+          persistentVolumeClaim:
+            claimName: shared-log-pvc
+     
+      containers:
+        - name: logger-container
+          image: busybox                    # Tiny lightweight image, ideal for simple log reading
+       
+          imagePullPolicy: IfNotPresent
+       
+          command:
+            - "sh"
+            - "-c"
+            - |
+              while true; do
+                echo "=== Shared Logs ==="
+                cat /logs/*.log 2>/dev/null || echo "No logs yet"
+                sleep 30
+              done
+        
+          # Logger reads logs from the same shared volume Catalog and Claims write to
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /logs
+              readOnly: true     #logger only reads, never writes

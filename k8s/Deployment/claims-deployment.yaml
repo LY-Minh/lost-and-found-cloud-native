@@ -1,0 +1,73 @@
+# CLAIMS SERVICE: item claims — users submit, admins approve/reject
+# Port: 3002
+# Ingress path: /claims
+
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: claims-deployment       # Name of this Deployment (used to reference it later)
+  labels:
+    app: claims                 # label
+
+spec:
+  replicas: 1                   # Only 1 pod — no load balancing needed for this service
+  
+  selector:
+    matchLabels:
+      app: claims                # Tells Kubernetes which pods belong to this deployment
+  
+  template:
+    metadata:
+      labels:
+        app: claims               # Applied to every pod created from this template
+   
+    spec:
+      volumes:                            # Declare volumes available to containers in this pod
+        - name: shared-logs                # Name of the volume (used in volumeMounts below)
+          persistentVolumeClaim:
+            claimName: shared-log-pvc      # shared across pods (Catalog + Claims write here, Logger reads)
+     
+      containers:
+        - name: claims-container
+          image: smanith/claims-service:v1.0      #change this
+         
+          imagePullPolicy: IfNotPresent     # Only pulls image if not already cached locally
+        
+          ports:
+            - containerPort: 3002           # Port the app listens on inside the container
+        
+          volumeMounts:
+            - name: shared-logs             # Must match volume name above
+              mountPath: /app/logs           # Where the shared volume is mounted inside this container
+         
+          env:                              # Environment variables injected into the container
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:                 # Pulled securely from a Kubernetes Secret, not hardcoded
+                  name: claims-secret
+                  key: MONGO_URI
+         
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: claims-secret
+                  key: JWT_SECRET
+           
+            - name: PORT
+              value: "3002"                   # Plain value since port isn't sensitive
+       
+          livenessProbe:       # restarts container if unhealthy
+            httpGet:
+              path: /health                   # Health check endpoint the app must expose
+              port: 3002
+            initialDelaySeconds: 10           # Wait 10s after startup before first check
+            periodSeconds: 10                 # Repeat check every 10s
+         
+          readinessProbe:      # controls when traffic is sent
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 5            # Wait 5s before first readiness check
+            periodSeconds: 5                  # Repeat check every 5s

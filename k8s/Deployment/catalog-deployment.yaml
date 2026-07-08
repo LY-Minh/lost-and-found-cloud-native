@@ -1,0 +1,98 @@
+# CATALOG SERVICE
+# Handles lost & found item listings (CRUD operations)
+# Replicas: 2 — load balanced
+# Port: 3001
+# Ingress path: /catalog
+#
+# SPECIAL: This pod runs 2 containers:
+#   1. catalog-container — main application
+#   2. logger (sidecar)  — reads shared logs via emptyDir volume
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: catalog-deployment          # Name of this Deployment
+  labels:
+    app: catalog                    # Label used to identify this deployment
+
+spec:
+  replicas: 2                       # 2 pods — Kubernetes load balances traffic between them
+  
+  selector:
+    matchLabels:
+      app: catalog                  # Tells Kubernetes which pods belong to this deployment
+ 
+  template:
+    metadata:
+      labels:
+        app: catalog                 # Applied to every pod created from this template
+  
+    spec:
+      # Shared VOLUME — emptyDir between catalog-container and logger sidecar
+      volumes:
+        - name: shared-logs           # Name of the volume (referenced in volumeMounts below)
+          emptyDir: {}                 # Temporary storage, exists only while the pod is alive
+    
+      containers:
+        # MAIN CONTAINER — Catalog Application
+        - name: catalog-container
+          image: smanith/catalog-service:v1.0      #change this
+       
+          imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
+       
+          ports:
+            - containerPort: 3001           # Port the app listens on inside the container
+      
+          env:                              # Environment variables injected into the container
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:                 # Pulled securely from a Kubernetes Secret
+                  name: catalog-secret
+                  key: MONGO_URI
+         
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: catalog-secret
+                  key: JWT_SECRET
+         
+            - name: PORT
+              value: "3001"                   # Plain value since port isn't sensitive
+       
+          livenessProbe:        # Restarts container if it becomes unhealthy
+            httpGet:
+              path: /health                   # Health check endpoint the app must expose
+              port: 3001
+            initialDelaySeconds: 10           # Wait 10s after startup before first check
+            periodSeconds: 10                 # Repeat check every 10s
+         
+          readinessProbe:       # Controls whether traffic is routed to this pod
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 5            # Wait 5s before first readiness check
+            periodSeconds: 5                  # Repeat check every 5s
+        
+          # Catalog writes logs to this shared volume
+          volumeMounts:
+            - name: shared-logs               # Must match volume name declared above
+              mountPath: /app/logs              # Path inside container where volume is mounted
+
+        # SIDECAR CONTAINER — Logger
+        - name: logger
+          image: busybox                     # Tiny lightweight image, ideal for simple sidecar tasks
+          imagePullPolicy: IfNotPresent
+          command:
+            - "sh"
+            - "-c"
+            - |
+              while true; do
+                echo "=== Catalog Logs ==="
+                cat /logs/catalog.log 2>/dev/null || echo "No logs yet"
+                sleep 30
+              done
+          # Logger reads logs from the same shared volume
+          volumeMounts:
+            - name: shared-logs               # Same volume as catalog-container — this is what makes it "shared"
+              mountPath: /logs                  # Mounted at a different path, but points to the same storage

@@ -1,0 +1,20 @@
+# PERSISTENT VOLUME
+# Shared storage accessible by multiple pods
+# catalog-pod and claims-pod write logs here
+# logger-pod reads logs from here
+
+apiVersion: v1
+kind: PersistentVolume
+
+metadata:
+  name: shared-logs-pv
+
+spec:
+  capacity:
+    storage: 1Gi              # 1 gigabyte of storage
+
+  accessModes:
+    - ReadWriteMany           # Multiple pods can read and write simultaneously
+
+  hostPath:
+    path: /mnt/shared-logs    # Path on the Minikube node
