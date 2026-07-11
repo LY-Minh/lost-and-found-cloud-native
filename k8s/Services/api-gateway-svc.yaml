@@ -1,0 +1,13 @@
+# API Gateway Service — the Ingress auth-url targets this at /auth-check.
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-svc
+spec:
+  type: ClusterIP                 # internal only; reached by ingress-nginx, not clients
+  selector:
+    app: api-gateway              # matches the api-gateway Deployment pods
+  ports:
+    - name: http
+      port: 80                    # Service port (used in the auth-url)
+      targetPort: 80              # container port (nginx listens on 80)

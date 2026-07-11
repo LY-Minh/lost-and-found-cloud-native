@@ -1,82 +1,70 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# build-and-push.sh
-# Builds all service Docker images and pushes them to DockerHub.
+# build-and-push.sh  (Kubernetes edition)
+# Builds every service image and pushes it to DockerHub with the
+# EXACT names the k8s Deployments reference:
+#     jinn2/lostfound-<service>:v1.0
 #
 # Usage:
-#   ./build-and-push.sh
+#   ./build-and-push.sh              # build native arch (fine for local minikube)
+#   PLATFORM=linux/amd64 ./build-and-push.sh   # cross-build if the cluster is amd64
 #
 # Prerequisites:
 #   - Docker daemon running
 #   - Logged in to DockerHub:  docker login -u jinn2
-#   - All placeholder IPs in api-gateway/nginx.conf replaced
+#
+# After pushing, (re)deploy with:  ./deploy-minikube.sh
+# (imagePullPolicy is IfNotPresent — if a node already cached v1.0, either bump
+#  TAG here + in k8s/Deployment/*, or `minikube image rm <image>` first.)
 # ═══════════════════════════════════════════════════════════════
-set -e
+set -euo pipefail
 
 DOCKER_USER="jinn2"
 IMAGE_PREFIX="lostfound"
+TAG="v1.0"                       # must match the tag in k8s/Deployment/*.yaml
+PLATFORM="${PLATFORM:-}"         # empty = native arch; set e.g. linux/amd64 to cross-build
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# ─── Service definitions ─────────────────────────────────────
-# Format: "service-name|source-folder|port"
+# One entry per service: "image-suffix|source-folder"
+# (logger uses stock busybox — nothing to build)
 SERVICES=(
-  "api-gateway|api-gateway|80"
-  "auth-service|auth-service|3001"
-  "catalog-service|catalog-service|3002"
-  "claims-service|claims-service|3003"
-  "report-service|report-service|3004"
-  "profile-service|profile-service|3005"
-  "feedback-service|feedback-service|3006"
+  "api-gateway|api-gateway"
+  "auth-service|auth-service"
+  "catalog-service|catalog-service"
+  "claims-service|claims-service"
+  "report-service|report-service"
+  "profile-service|profile-service"
+  "feedback-service|feedback-service"
 )
 
-# ─── Colours ─────────────────────────────────────────────────
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
 
-echo -e "${GREEN}═══════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  Build & Push — DockerHub: ${DOCKER_USER}/${IMAGE_PREFIX}-*${NC}"
-echo -e "${GREEN}═══════════════════════════════════════════════════${NC}"
-echo ""
-
-# ─── Pre-flight: check for placeholder IPs in nginx.conf ─────
-# Only check actual upstream server lines (ignore comments)
-if grep -E '^\s*server\s' api-gateway/nginx.conf | grep -qE '(AUTH_SERVICE_IP|CLAIMS_SERVICE_IP|CATALOG_INSTANCE_[12]_IP|REPORT_SERVICE_IP|PROFILE_SERVICE_IP|FEEDBACK_SERVICE_IP)' 2>/dev/null; then
-  echo -e "${YELLOW}⚠  WARNING: Placeholder IPs found in api-gateway/nginx.conf${NC}"
-  echo -e "${YELLOW}   The api-gateway image will not route correctly until you${NC}"
-  echo -e "${YELLOW}   replace them with real EC2 IPs.${NC}"
-  echo -e "${YELLOW}   See the EC2 IP QUICK-REFERENCE comment in nginx.conf.${NC}"
-  echo ""
-  read -p "Continue anyway? (y/N) " -n 1 -r
-  echo ""
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 1
-  fi
-fi
+echo -e "${GREEN}═══ Build & Push → DockerHub: ${DOCKER_USER}/${IMAGE_PREFIX}-*:${TAG} ═══${NC}"
 
 # ─── Build & push each service ───────────────────────────────
 for entry in "${SERVICES[@]}"; do
-  IFS='|' read -r name folder port <<< "$entry"
-  tag="${DOCKER_USER}/${IMAGE_PREFIX}-${name}:latest"
+  IFS='|' read -r name folder <<< "$entry"
+  tag="${DOCKER_USER}/${IMAGE_PREFIX}-${name}:${TAG}"
 
-  echo -e "${GREEN}── Building ${tag} (linux/amd64) ──${NC}"
-  docker build --platform linux/amd64 -t "$tag" "$folder/"
-  echo -e "${GREEN}✓ Built ${tag}${NC}"
-  echo ""
+  echo -e "${GREEN}── Building ${tag}${PLATFORM:+ (${PLATFORM})} ──${NC}"
+  docker build ${PLATFORM:+--platform "$PLATFORM"} -t "$tag" "$ROOT/$folder/"
 
   echo -e "${GREEN}── Pushing ${tag} ──${NC}"
   docker push "$tag"
-  echo -e "${GREEN}✓ Pushed ${tag}${NC}"
-  echo ""
 done
 
-echo -e "${GREEN}═══════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}  All images built and pushed successfully!${NC}"
-echo -e "${GREEN}═══════════════════════════════════════════════════${NC}"
-echo ""
-echo "Next steps:"
-echo "  1. SSH into each EC2 instance"
-echo "  2. Copy the ec2-*/ folder contents to the instance"
-echo "  3. cp env-template .env  &&  fill in Atlas credentials"
-echo "  4. chmod +x deploy.sh  &&  ./deploy.sh"
+# ─── Verify the k8s Deployments reference exactly what we pushed ─
+echo -e "${GREEN}── Verifying k8s/Deployment/*.yaml image refs ──${NC}"
+FAIL=0
+for entry in "${SERVICES[@]}"; do
+  IFS='|' read -r name folder <<< "$entry"
+  tag="${DOCKER_USER}/${IMAGE_PREFIX}-${name}:${TAG}"
+  if grep -rq "image: ${tag}" "$ROOT/k8s/Deployment/"; then
+    echo -e "  ✓ ${tag} referenced in Deployments"
+  else
+    echo -e "  ${RED}✗ ${tag} NOT referenced by any Deployment — fix the image: line${NC}"
+    FAIL=1
+  fi
+done
+[ "$FAIL" -eq 0 ] && echo -e "${GREEN}All images pushed AND wired into the Deployments. Run ./deploy-minikube.sh next.${NC}"
+exit $FAIL

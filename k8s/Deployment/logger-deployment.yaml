@@ -26,7 +26,7 @@ spec:
       volumes:
         - name: shared-logs
           persistentVolumeClaim:
-            claimName: shared-log-pvc
+            claimName: shared-logs-pvc      # must match k8s/Volume/pvc.yaml metadata.name
      
       containers:
         - name: logger-container

@@ -11,9 +11,10 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/auth-db';
 app.use(cors());
 app.use(express.json());
 
-// Routes
-// Student routes - Nginx enforces student role
-app.use('/student', studentProfileRoutes);
+// Routes — under the service prefix "/profile" (Ingress fans out by first
+// segment, no rewrite). Role is the 2nd segment.
+// Student routes: /profile/student/... (auth-svc validator enforces student role)
+app.use('/profile/student', studentProfileRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

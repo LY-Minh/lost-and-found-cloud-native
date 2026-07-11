@@ -12,12 +12,13 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/feedback-db';
 app.use(cors());
 app.use(express.json());
 
-// Routes
-// Student routes - Nginx enforces student role
-app.use('/student', studentFeedbackRoutes);
+// Routes — under the service prefix "/feedback" (Ingress fans out by first
+// segment, no rewrite). Role is the 2nd segment, enforced by the auth-svc validator.
+// Student routes: /feedback/student/... (validator enforces student role)
+app.use('/feedback/student', studentFeedbackRoutes);
 
-// Admin routes - Nginx enforces admin role
-app.use('/admin', adminFeedbackRoutes);
+// Admin routes: /feedback/admin/... (validator enforces admin role)
+app.use('/feedback/admin', adminFeedbackRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

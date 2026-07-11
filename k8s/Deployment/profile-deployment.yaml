@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: profile-container
-          image: smanith/profile-service:v1.0      #change this
+          image: jinn2/lostfound-profile-service:v1.0      # built+pushed by ./build-and-push.sh
        
           imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
        

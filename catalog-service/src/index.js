@@ -13,12 +13,14 @@ const INSTANCE_ID = process.env.INSTANCE_ID || 'unknown';
 app.use(cors());
 app.use(express.json());
 
-// Routes
-// Authenticated routes (any role) - Nginx validates token
-app.use('/items', itemRoutes);
+// Routes — all mounted under the service prefix "/catalog" so the Ingress can
+// fan out by first path segment with NO rewrite. Role is the 2nd segment:
+// the auth-svc validator reads it (/catalog/admin/... => admin required).
+// Authenticated routes (any role): /catalog/items...
+app.use('/catalog/items', itemRoutes);
 
-// Admin routes - Nginx enforces admin role
-app.use('/admin/items', adminItemRoutes);
+// Admin routes: /catalog/admin/items... (auth-svc validator enforces admin role)
+app.use('/catalog/admin/items', adminItemRoutes);
 
 // Health check — includes INSTANCE_ID for load-balancing verification
 app.get('/health', (req, res) => {

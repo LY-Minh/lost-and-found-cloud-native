@@ -1,0 +1,1347 @@
+{
+  "info": {
+    "name": "Lost & Found \u2014 K8s Ingress (fanout + gateway auth)",
+    "description": "Tests EVERY endpoint through the Ingress single-domain fanout.\n\nSETUP:\n1. ./deploy-minikube.sh (cluster up, images pulled)\n2. /etc/hosts:  <minikube ip>  lostfound.com\n3. Run folders top-to-bottom (or use the Collection Runner) \u2014 tokens and IDs (ITEM_ID, CLAIM_ID) are captured automatically by test scripts.\n\nRequest flow: client -> ingress-nginx -> (auth-url subrequest -> api-gateway /auth-check verifies JWT + role by 2nd path segment) -> service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://lostfound.com",
+      "description": "Ingress host (must be in /etc/hosts -> minikube ip)"
+    },
+    {
+      "key": "STUDENT_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ITEM_ID",
+      "value": ""
+    },
+    {
+      "key": "CLAIM_ID",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth (public \u2014 no token needed)",
+      "description": "Only /auth/login and /auth/register bypass the gateway check (public Ingress object).",
+      "item": [
+        {
+          "name": "1.1 Register Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Public route. Re-runs return 400 (email exists) \u2014 that's fine, login below refreshes the token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vireak Student\",\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"backend_pass456\",\n  \"role\": \"student\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 created OR 400 already exists', () => pm.expect([201,400]).to.include(pm.response.code));",
+                  "const j = pm.response.json();",
+                  "if (j.token) pm.collectionVariables.set('STUDENT_TOKEN', j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.2 Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Chanda Admin\",\n  \"email\": \"chanda.admin@university.edu.kh\",\n  \"password\": \"backend_pass456\",\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 created OR 400 already exists', () => pm.expect([201,400]).to.include(pm.response.code));",
+                  "const j = pm.response.json();",
+                  "if (j.token) pm.collectionVariables.set('ADMIN_TOKEN', j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.3 Login Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"backend_pass456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 + token', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('STUDENT_TOKEN', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.4 Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chanda.admin@university.edu.kh\",\n  \"password\": \"backend_pass456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 + token', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().token).to.be.a('string'); });",
+                  "pm.collectionVariables.set('ADMIN_TOKEN', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Catalog (/catalog -> catalog-svc:3001, 2 replicas)",
+      "description": "/catalog/items* = any authenticated role; /catalog/admin/items* = admin only.",
+      "item": [
+        {
+          "name": "2.1 Create Item (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/admin/items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "admin",
+                "items"
+              ]
+            },
+            "description": "Saves ITEM_ID for the claim + update + delete requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Physical Copy of Xenoblade Chronicles 3\",\n  \"description\": \"Found near the library computer area.\",\n  \"category\": \"entertainment\",\n  \"status\": \"found\",\n  \"location\": \"Library Computer Area\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('ITEM_ID', pm.response.json().item._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.2 Get All Items (Student)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "items"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));",
+                  "pm.test('array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.3 Get Lost Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/items/lost",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "items",
+                "lost"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.4 Get Found Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/items/found",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "items",
+                "found"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.5 Get Item By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/items/{{ITEM_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "items",
+                "{{ITEM_ID}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.6 Update Item (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/admin/items/{{ITEM_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "admin",
+                "items",
+                "{{ITEM_ID}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Xenoblade Chronicles 3 (cartridge only)\",\n  \"description\": \"Updated description after claim inspection.\",\n  \"category\": \"entertainment\",\n  \"status\": \"found\",\n  \"location\": \"Front Desk\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Claims (/claims -> claims-svc:3002)",
+      "description": "/claims/student/* = student; /claims/admin/* = admin; /claims/:id = any role.",
+      "item": [
+        {
+          "name": "3.1 Submit Claim (Student)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/claims/student/submit-claim",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "claims",
+                "student",
+                "submit-claim"
+              ]
+            },
+            "description": "Saves CLAIM_ID for get/approve/reject.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemId\": \"{{ITEM_ID}}\",\n  \"message\": \"This is my game \\u2014 dropped it while studying.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('CLAIM_ID', pm.response.json().claim._id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.2 My Claims (Student)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/claims/student/my-claims",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "claims",
+                "student",
+                "my-claims"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.3 Get Claim By Id (any role)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/claims/{{CLAIM_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "claims",
+                "{{CLAIM_ID}}"
+              ]
+            },
+            "description": "2nd path segment is an ObjectId (not admin/student), so any valid token passes RBAC."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.4 All Claims (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/claims/admin/claims",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "claims",
+                "admin",
+                "claims"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.5 Approve Claim (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/claims/admin/approve-claim/{{CLAIM_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "claims",
+                "admin",
+                "approve-claim",
+                "{{CLAIM_ID}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.6 Reject Claim (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/claims/admin/reject-claim/{{CLAIM_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "claims",
+                "admin",
+                "reject-claim",
+                "{{CLAIM_ID}}"
+              ]
+            },
+            "description": "Runs after approve on the same claim \u2014 final status will be 'rejected'. Skip if you want it to stay approved."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Report (/report -> report-svc:3003, admin only)",
+      "description": "Stateless service \u2014 aggregates from catalog-svc + claims-svc over pod-to-pod HTTP.",
+      "item": [
+        {
+          "name": "4.1 Total Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/report/admin/total-items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "report",
+                "admin",
+                "total-items"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.2 Total Claims",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/report/admin/total-claims",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "report",
+                "admin",
+                "total-claims"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.3 Pending Claims",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/report/admin/pending-claims",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "report",
+                "admin",
+                "pending-claims"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.4 Claims By Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/report/admin/claims-by-status",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "report",
+                "admin",
+                "claims-by-status"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Profile (/profile -> profile-svc:3004, student only)",
+      "description": "Reads the users DB shared with auth-service; identity comes from the X-User-Id header the gateway injects.",
+      "item": [
+        {
+          "name": "5.1 My Profile (Student)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/profile/student/me",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "profile",
+                "student",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.2 Update My Profile (Student)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/profile/student/update",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "profile",
+                "student",
+                "update"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vireak (Updated)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Feedback (/feedback -> feedback-svc:3005)",
+      "description": "/feedback/student/* = student; /feedback/admin/* = admin.",
+      "item": [
+        {
+          "name": "6.1 Submit Feedback (Student)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/feedback/student/submit-feedback",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "feedback",
+                "student",
+                "submit-feedback"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"The k8s ingress fanout handles these claims really fast!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6.2 All Feedback (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/feedback/admin/feedback",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "feedback",
+                "admin",
+                "feedback"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Security tests (gateway MUST reject)",
+      "description": "Every request here must FAIL \u2014 proves the Ingress auth-url delegation to the api-gateway works.",
+      "item": [
+        {
+          "name": "T1 Wrong Password -> 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"wrong_password_attempt\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "T2 No Token -> 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "items"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('gateway blocks: no token', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "T3 Invalid Token -> 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer not.a.valid.jwt",
+                "description": "malformed JWT"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "items"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('gateway blocks: bad signature', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "T4 Student on Admin route -> 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/report/admin/total-items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "report",
+                "admin",
+                "total-items"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('RBAC: admin segment vs student role', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "T5 Admin on Student route -> 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/profile/student/me",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "profile",
+                "student",
+                "me"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('RBAC: student segment vs admin role', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "T6 Student creating item -> 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/admin/items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "admin",
+                "items"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"should never be created\",\n  \"description\": \"x\",\n  \"category\": \"other\",\n  \"status\": \"lost\",\n  \"location\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Load balancing & cleanup",
+      "description": "",
+      "item": [
+        {
+          "name": "8.1 LOAD BALANCING \u2014 run 5x",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{STUDENT_TOKEN}}",
+                "description": "JWT from student token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/items",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "items"
+              ]
+            },
+            "description": "catalog-svc fronts 2 replicas. Send this 5+ times (Runner iterations or spam Send) and check `kubectl logs deploy/catalog-deployment -c catalog-container --prefix -f` to see both pods serving."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8.2 Delete Item (Admin) \u2014 cleanup",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_TOKEN}}",
+                "description": "JWT from admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/catalog/admin/items/{{ITEM_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "catalog",
+                "admin",
+                "items",
+                "{{ITEM_ID}}"
+              ]
+            },
+            "description": "Removes the test item so re-runs start clean. (The claim doc remains; claims have no delete route.)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('returns 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

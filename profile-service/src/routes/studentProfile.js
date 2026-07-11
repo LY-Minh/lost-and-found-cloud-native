@@ -4,7 +4,7 @@ const User = require('../models/User');
 const router = express.Router();
 
 // GET /student/me - Retrieve the logged-in student's profile
-// Nginx injects X-User-Id header after JWT validation
+// The auth-svc validator (via Ingress) validates the JWT and injects the X-User-Id header
 router.get('/me', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];

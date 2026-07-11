@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: feedback-container
-          image: smanith/feedback-service:v1.0      #change this
+          image: jinn2/lostfound-feedback-service:v1.0      # built+pushed by ./build-and-push.sh
          
           imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
          

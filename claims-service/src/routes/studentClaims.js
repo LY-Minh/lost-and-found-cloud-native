@@ -4,7 +4,7 @@ const Claim = require('../models/Claim');
 const router = express.Router();
 
 // GET /student/my-claims - Get own claims (student only)
-// Nginx enforces student role; user ID comes via X-User-Id header
+// Student role enforced upstream by the auth-svc validator (via Ingress); user ID arrives in the X-User-Id header
 router.get('/my-claims', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];

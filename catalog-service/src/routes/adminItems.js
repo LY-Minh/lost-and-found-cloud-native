@@ -4,7 +4,7 @@ const Item = require('../models/Item');
 const router = express.Router();
 
 // POST /admin/items - Create a new item (admin/teacher only)
-// Nginx enforces admin role; user info comes via X-User-Id header
+// Admin role enforced upstream by the auth-svc validator (via Ingress); user info arrives in the X-User-Id header
 router.post('/', async (req, res) => {
   try {
     const { title, description, category, status, location } = req.body;

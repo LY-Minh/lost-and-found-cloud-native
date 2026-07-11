@@ -1,0 +1,60 @@
+# API GATEWAY (nginx + njs)
+# Auth validator for the Ingress: exposes GET /auth-check which verifies the
+# JWT + role (njs/auth.js). NOT a proxy — the Ingress does the path fanout.
+# Port: 80
+# Referenced by: the auth-url annotation in k8s/ingress.yaml
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: api-gateway-deployment      # Name of this Deployment
+  labels:
+    app: api-gateway                # Label used to identify this deployment
+
+spec:
+  replicas: 1                       # A single validator is fine for single-node
+
+  selector:
+    matchLabels:
+      app: api-gateway              # Tells Kubernetes which pods belong to this deployment
+
+  template:
+    metadata:
+      labels:
+        app: api-gateway            # Applied to every pod created from this template
+
+    spec:
+      containers:
+        - name: api-gateway-container
+          image: jinn2/lostfound-api-gateway:v1.0     # built+pushed by ./build-and-push.sh
+
+          imagePullPolicy: IfNotPresent   # Only pulls image if not already cached locally
+
+          ports:
+            - containerPort: 80           # nginx listens on 80 (see api-gateway/nginx.conf)
+
+          # JWT_SECRET MUST match the secret auth-svc signs tokens with, or the
+          # gateway can't verify them. Reuse the SAME Secret + key as auth.
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret            # same Secret auth-svc uses, so gateway + auth share JWT_SECRET
+                  key: JWT_SECRET
+
+          # Liveness probe — restarts container if nginx dies
+          livenessProbe:
+            httpGet:
+              path: /health                 # served by the nginx.conf /health location
+              port: 80
+            initialDelaySeconds: 10         # Wait 10s after startup before first check
+            periodSeconds: 10               # Repeat check every 10s
+
+          # Readiness probe — only route auth checks once nginx is up
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5          # Wait 5s before first readiness check
+            periodSeconds: 5                # Repeat check every 5s

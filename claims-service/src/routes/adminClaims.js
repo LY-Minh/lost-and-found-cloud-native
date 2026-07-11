@@ -4,7 +4,7 @@ const Claim = require('../models/Claim');
 const router = express.Router();
 
 // GET /admin/claims - Get all claims (admin only)
-// Nginx enforces admin role
+// Admin role enforced upstream by the auth-svc validator (via Ingress)
 router.get('/claims', async (req, res) => {
   try {
     const claims = await Claim.find().sort({ createdAt: -1 });

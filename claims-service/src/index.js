@@ -13,15 +13,18 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/claims-db';
 app.use(cors());
 app.use(express.json());
 
-// Routes
-// Authenticated routes (any role) - Nginx validates token
+// Routes — all under the service prefix "/claims" (Ingress fans out by first
+// segment, no rewrite). Role is the 2nd segment, enforced by the auth-svc
+// validator. Register the role-specific routers BEFORE the catch-all "/claims"
+// router so /claims/admin/... and /claims/student/... aren't shadowed by /:id.
+// Student routes: /claims/student/... (validator enforces student role)
+app.use('/claims/student', studentClaimRoutes);
+
+// Admin routes: /claims/admin/... (validator enforces admin role)
+app.use('/claims/admin', adminClaimRoutes);
+
+// Authenticated routes (any role): /claims/:id
 app.use('/claims', claimRoutes);
-
-// Student routes - Nginx enforces student role
-app.use('/student', studentClaimRoutes);
-
-// Admin routes - Nginx enforces admin role
-app.use('/admin', adminClaimRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

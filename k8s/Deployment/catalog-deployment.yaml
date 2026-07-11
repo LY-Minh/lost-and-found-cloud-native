@@ -37,7 +37,7 @@ spec:
       containers:
         # MAIN CONTAINER — Catalog Application
         - name: catalog-container
-          image: smanith/catalog-service:v1.0      #change this
+          image: jinn2/lostfound-catalog-service:v1.0      # built+pushed by ./build-and-push.sh
        
           imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
        

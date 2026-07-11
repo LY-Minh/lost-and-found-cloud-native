@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: report-container
-          image: smanith/report-service:v1.0      #change this
+          image: jinn2/lostfound-report-service:v1.0      # built+pushed by ./build-and-push.sh
         
           imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
          
@@ -35,12 +35,9 @@ spec:
             - containerPort: 3003           # Port the app listens on inside the container
          
           env:                              # Environment variables injected into the container
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:                 # Pulled securely from a Kubernetes Secret, not hardcoded
-                  name: report-secret
-                  key: MONGO_URI
-            
+            # NOTE: no MONGO_URI — report-service is STATELESS. It has no DB of
+            # its own (verified: no mongoose in package.json or any git commit);
+            # it aggregates data over HTTP from catalog + claims (URLs below).
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -49,7 +46,15 @@ spec:
             
             - name: PORT
               value: "3003"                   # Plain value since port isn't sensitive
-         
+
+            # Report AGGREGATES from other services (server-to-server, pod-to-pod).
+            # These are the in-cluster addresses it calls — the k8s equivalent of
+            # the EC2 IPs you configured in the midterm. Not secret, so plain env.
+            - name: CATALOG_SERVICE_URL
+              value: "http://catalog-svc:3001"   # catalog-svc DNS + Service port
+            - name: CLAIMS_SERVICE_URL
+              value: "http://claims-svc:3002"    # claims-svc DNS + Service port
+
           livenessProbe:        # Restarts container if it becomes unhealthy
             httpGet:
               path: /health                   # Health check endpoint the app must expose

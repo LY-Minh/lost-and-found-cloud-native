@@ -9,9 +9,10 @@ const PORT = process.env.PORT || 3004;
 app.use(cors());
 app.use(express.json());
 
-// Routes
-// Admin routes - Nginx enforces admin role
-app.use('/admin', adminReportRoutes);
+// Routes — under the service prefix "/report" (Ingress fans out by first
+// segment, no rewrite). Role is the 2nd segment.
+// Admin routes: /report/admin/... (auth-svc validator enforces admin role)
+app.use('/report/admin', adminReportRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
