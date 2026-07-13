@@ -7,7 +7,6 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3004
-      # For local dev: point to localhost or other services
       - CATALOG_SERVICE_URL=http://localhost:3002
       - CLAIMS_SERVICE_URL=http://localhost:3003
 

@@ -4,5 +4,4 @@ npm-debug.log*
 .DS_Store
 ec2-*/.env
 
-# Kubernetes Secret (DB URIs + JWT secret) — fill locally, never commit
 k8s/secret.yaml

@@ -3,12 +3,11 @@ const Feedback = require('../models/Feedback');
 
 const router = express.Router();
 
-// POST /student/submit-feedback - Submit feedback (student)
 router.post('/submit-feedback', async (req, res) => {
   try {
     const { message } = req.body;
     const userId = req.headers['x-user-id'];
-    
+
     if (!message) {
       return res.status(400).json({ message: 'Feedback message is required' });
     }
@@ -17,7 +16,7 @@ router.post('/submit-feedback', async (req, res) => {
       userId,
       message
     });
-    
+
     await feedback.save();
     res.status(201).json({ message: 'Feedback submitted successfully', feedback });
   } catch (error) {

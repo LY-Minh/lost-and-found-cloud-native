@@ -3,7 +3,6 @@ const Item = require('../models/Item');
 
 const router = express.Router();
 
-// GET /items - Get all items
 router.get('/', async (req, res) => {
   try {
     const items = await Item.find().sort({ createdAt: -1 });
@@ -13,7 +12,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /items/lost - Get all lost items
 router.get('/lost', async (req, res) => {
   try {
     const items = await Item.find({ status: 'lost' }).sort({ createdAt: -1 });
@@ -23,7 +21,6 @@ router.get('/lost', async (req, res) => {
   }
 });
 
-// GET /items/found - Get all found items
 router.get('/found', async (req, res) => {
   try {
     const items = await Item.find({ status: 'found' }).sort({ createdAt: -1 });
@@ -33,7 +30,6 @@ router.get('/found', async (req, res) => {
   }
 });
 
-// GET /items/:id - Get item by id
 router.get('/:id', async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);

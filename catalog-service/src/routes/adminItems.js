@@ -3,8 +3,6 @@ const Item = require('../models/Item');
 
 const router = express.Router();
 
-// POST /admin/items - Create a new item (admin/teacher only)
-// Admin role enforced upstream by the auth-svc validator (via Ingress); user info arrives in the X-User-Id header
 router.post('/', async (req, res) => {
   try {
     const { title, description, category, status, location } = req.body;
@@ -25,7 +23,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /admin/items/:id - Update item (admin only)
 router.put('/:id', async (req, res) => {
   try {
     const { title, description, category, status, location } = req.body;
@@ -43,7 +40,6 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /admin/items/:id - Delete item (admin only)
 router.delete('/:id', async (req, res) => {
   try {
     const item = await Item.findByIdAndDelete(req.params.id);

@@ -1,65 +1,61 @@
-# PROFILE SERVICE
-# Handles user profile management
-# Port: 3004
-# Ingress path: /profile
 
 apiVersion: apps/v1
 
 kind: Deployment
 
 metadata:
-  name: profile-deployment        # Name of this Deployment
+  name: profile-deployment
   labels:
-    app: profile                  # Label used to identify this deployment
+    app: profile
 
 spec:
-  replicas: 1                     # Only 1 pod — no load balancing needed
-  
+  replicas: 1
+
   selector:
     matchLabels:
-      app: profile                 # Tells Kubernetes which pods belong to this deployment
- 
+      app: profile
+
   template:
     metadata:
       labels:
-        app: profile                # Applied to every pod created from this template
-  
+        app: profile
+
     spec:
       containers:
         - name: profile-container
-          image: jinn2/lostfound-profile-service:v1.0      # built+pushed by ./build-and-push.sh
-       
-          imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
-       
+          image: jinn2/lostfound-profile-service:v1.0
+
+          imagePullPolicy: IfNotPresent
+
           ports:
-            - containerPort: 3004           # Port the app listens on inside the container
-       
-          env:                              # Environment variables injected into the container
+            - containerPort: 3004
+
+          env:
             - name: MONGO_URI
               valueFrom:
-                secretKeyRef:                 # Pulled securely from a Kubernetes Secret, not hardcoded
+                secretKeyRef:
                   name: profile-secret
                   key: MONGO_URI
-        
+
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: profile-secret
                   key: JWT_SECRET
-        
+
             - name: PORT
-              value: "3004"                   # Plain value since port isn't sensitive
-       
-          livenessProbe:        # Restarts container if it becomes unhealthy
-            httpGet:
-              path: /health                   # Health check endpoint the app must expose
-              port: 3004
-            initialDelaySeconds: 10           # Wait 10s after startup before first check
-            periodSeconds: 10                 # Repeat check every 10s
-         
-          readinessProbe:       # Controls whether traffic is routed to this pod
+              value: "3004"
+
+          livenessProbe:
             httpGet:
               path: /health
               port: 3004
-            initialDelaySeconds: 5            # Wait 5s before first readiness check
-            periodSeconds: 5                  # Repeat check every 5s
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 5
+            periodSeconds: 5

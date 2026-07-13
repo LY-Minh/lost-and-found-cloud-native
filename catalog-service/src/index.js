@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const itemRoutes = require('./routes/items');
 const adminItemRoutes = require('./routes/adminItems');
 
@@ -9,25 +11,32 @@ const PORT = process.env.PORT || 3002;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/catalog-db';
 const INSTANCE_ID = process.env.INSTANCE_ID || 'unknown';
 
-// Middleware
+// Shared-volume request log: /app/logs is the shared-logs-pvc mount (PV).
+// The logger sidecar + logger-pod read this file back (cat /logs/catalog.log).
+const LOG_DIR = process.env.LOG_DIR || '/app/logs';
+const LOG_FILE = path.join(LOG_DIR, 'catalog.log');
+try { fs.mkdirSync(LOG_DIR, { recursive: true }); } catch (_) { /* local dev without the mount */ }
+
 app.use(cors());
 app.use(express.json());
 
-// Routes — all mounted under the service prefix "/catalog" so the Ingress can
-// fan out by first path segment with NO rewrite. Role is the 2nd segment:
-// the auth-svc validator reads it (/catalog/admin/... => admin required).
-// Authenticated routes (any role): /catalog/items...
+// Append one line per request to the shared volume (best-effort — never crash on log failure)
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    const line = `${new Date().toISOString()} [catalog:${INSTANCE_ID}] ${req.method} ${req.originalUrl} -> ${res.statusCode}\n`;
+    fs.appendFile(LOG_FILE, line, () => {});
+  });
+  next();
+});
+
 app.use('/catalog/items', itemRoutes);
 
-// Admin routes: /catalog/admin/items... (auth-svc validator enforces admin role)
 app.use('/catalog/admin/items', adminItemRoutes);
 
-// Health check — includes INSTANCE_ID for load-balancing verification
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'catalog-service', instance: INSTANCE_ID });
 });
 
-// Connect to MongoDB and start server
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Catalog Service connected to MongoDB');

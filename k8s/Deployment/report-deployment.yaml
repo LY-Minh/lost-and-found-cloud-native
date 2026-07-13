@@ -1,70 +1,60 @@
-# REPORT SERVICE
-# Handles item reports — users report suspicious listings
-# Port: 3003
-# Ingress path: /report
 
 apiVersion: apps/v1
 
 kind: Deployment
 
 metadata:
-  name: report-deployment         # Name of this Deployment
+  name: report-deployment
   labels:
-    app: report                   # Label used to identify this deployment
+    app: report
 
 spec:
-  replicas: 1                     # Only 1 pod — no load balancing needed
-  
+  replicas: 1
+
   selector:
     matchLabels:
-      app: report                  # Tells Kubernetes which pods belong to this deployment
-  
+      app: report
+
   template:
     metadata:
       labels:
-        app: report                 # Applied to every pod created from this template
-  
+        app: report
+
     spec:
       containers:
         - name: report-container
-          image: jinn2/lostfound-report-service:v1.0      # built+pushed by ./build-and-push.sh
-        
-          imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
-         
+          image: jinn2/lostfound-report-service:v1.0
+
+          imagePullPolicy: IfNotPresent
+
           ports:
-            - containerPort: 3003           # Port the app listens on inside the container
-         
-          env:                              # Environment variables injected into the container
-            # NOTE: no MONGO_URI — report-service is STATELESS. It has no DB of
-            # its own (verified: no mongoose in package.json or any git commit);
-            # it aggregates data over HTTP from catalog + claims (URLs below).
+            - containerPort: 3003
+
+          env:
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: report-secret
                   key: JWT_SECRET
-            
+
             - name: PORT
-              value: "3003"                   # Plain value since port isn't sensitive
+              value: "3003"
 
-            # Report AGGREGATES from other services (server-to-server, pod-to-pod).
-            # These are the in-cluster addresses it calls — the k8s equivalent of
-            # the EC2 IPs you configured in the midterm. Not secret, so plain env.
             - name: CATALOG_SERVICE_URL
-              value: "http://catalog-svc:3001"   # catalog-svc DNS + Service port
+              value: "http://catalog-svc:3001"
             - name: CLAIMS_SERVICE_URL
-              value: "http://claims-svc:3002"    # claims-svc DNS + Service port
+              value: "http://claims-svc:3002"
 
-          livenessProbe:        # Restarts container if it becomes unhealthy
-            httpGet:
-              path: /health                   # Health check endpoint the app must expose
-              port: 3003
-            initialDelaySeconds: 10           # Wait 10s after startup before first check
-            periodSeconds: 10                 # Repeat check every 10s
-          
-          readinessProbe:       # Controls whether traffic is routed to this pod
+          livenessProbe:
             httpGet:
               path: /health
               port: 3003
-            initialDelaySeconds: 5            # Wait 5s before first readiness check
-            periodSeconds: 5                  # Repeat check every 5s
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 5

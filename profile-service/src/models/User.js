@@ -30,7 +30,6 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Never return password in JSON
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;

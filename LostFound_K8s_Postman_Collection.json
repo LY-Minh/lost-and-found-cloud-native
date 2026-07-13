@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Lost & Found \u2014 K8s Ingress (fanout + gateway auth)",
-    "description": "Tests EVERY endpoint through the Ingress single-domain fanout.\n\nSETUP:\n1. ./deploy-minikube.sh (cluster up, images pulled)\n2. /etc/hosts:  <minikube ip>  lostfound.com\n3. Run folders top-to-bottom (or use the Collection Runner) \u2014 tokens and IDs (ITEM_ID, CLAIM_ID) are captured automatically by test scripts.\n\nRequest flow: client -> ingress-nginx -> (auth-url subrequest -> api-gateway /auth-check verifies JWT + role by 2nd path segment) -> service.",
+    "name": "Lost & Found — K8s Ingress (fanout + gateway auth)",
+    "description": "Tests EVERY endpoint through the Ingress single-domain fanout.\n\nSETUP:\n1. ./deploy-minikube.sh (cluster up, images pulled)\n2. /etc/hosts:  <minikube ip>  lostfound.com\n3. Run folders top-to-bottom (or use the Collection Runner) — tokens and IDs (ITEM_ID, CLAIM_ID) are captured automatically by test scripts.\n\nRequest flow: client -> ingress-nginx -> (auth-url subrequest -> api-gateway /auth-check verifies JWT + role by 2nd path segment) -> service.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -29,7 +29,7 @@
   ],
   "item": [
     {
-      "name": "1. Auth (public \u2014 no token needed)",
+      "name": "1. Auth (public — no token needed)",
       "description": "Only /auth/login and /auth/register bypass the gateway check (public Ingress object).",
       "item": [
         {
@@ -52,10 +52,10 @@
                 "register"
               ]
             },
-            "description": "Public route. Re-runs return 400 (email exists) \u2014 that's fine, login below refreshes the token.",
+            "description": "Public route. Re-runs return 400 (email exists) — that's fine, login below refreshes the token.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Vireak Student\",\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"backend_pass456\",\n  \"role\": \"student\"\n}",
+              "raw": "{\n  \"name\": \"Sokha Lim\",\n  \"email\": \"sokha.lim@student.edu.kh\",\n  \"password\": \"campus_pass789\",\n  \"role\": \"student\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -100,7 +100,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Chanda Admin\",\n  \"email\": \"chanda.admin@university.edu.kh\",\n  \"password\": \"backend_pass456\",\n  \"role\": \"admin\"\n}",
+              "raw": "{\n  \"name\": \"Dara Keo\",\n  \"email\": \"dara.keo@university.edu.kh\",\n  \"password\": \"campus_pass789\",\n  \"role\": \"admin\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -145,7 +145,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"backend_pass456\"\n}",
+              "raw": "{\n  \"email\": \"sokha.lim@student.edu.kh\",\n  \"password\": \"campus_pass789\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -189,7 +189,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"chanda.admin@university.edu.kh\",\n  \"password\": \"backend_pass456\"\n}",
+              "raw": "{\n  \"email\": \"dara.keo@university.edu.kh\",\n  \"password\": \"campus_pass789\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -224,7 +224,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               },
               {
                 "key": "Content-Type",
@@ -245,7 +245,7 @@
             "description": "Saves ITEM_ID for the claim + update + delete requests.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Physical Copy of Xenoblade Chronicles 3\",\n  \"description\": \"Found near the library computer area.\",\n  \"category\": \"entertainment\",\n  \"status\": \"found\",\n  \"location\": \"Library Computer Area\"\n}",
+              "raw": "{\n  \"title\": \"Blue Hydro Flask Water Bottle\",\n  \"description\": \"Found on a bench in the gym locker room.\",\n  \"category\": \"accessories\",\n  \"status\": \"found\",\n  \"location\": \"Gym Locker Room\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -274,7 +274,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -310,7 +310,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -346,7 +346,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -382,7 +382,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -418,7 +418,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               },
               {
                 "key": "Content-Type",
@@ -440,7 +440,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Xenoblade Chronicles 3 (cartridge only)\",\n  \"description\": \"Updated description after claim inspection.\",\n  \"category\": \"entertainment\",\n  \"status\": \"found\",\n  \"location\": \"Front Desk\"\n}",
+              "raw": "{\n  \"title\": \"Blue Hydro Flask (dented lid)\",\n  \"description\": \"Moved to the front desk for pickup after claim inspection.\",\n  \"category\": \"accessories\",\n  \"status\": \"found\",\n  \"location\": \"Front Desk\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -474,7 +474,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               },
               {
                 "key": "Content-Type",
@@ -495,7 +495,7 @@
             "description": "Saves CLAIM_ID for get/approve/reject.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"itemId\": \"{{ITEM_ID}}\",\n  \"message\": \"This is my game \\u2014 dropped it while studying.\"\n}",
+              "raw": "{\n  \"itemId\": \"{{ITEM_ID}}\",\n  \"message\": \"That's my water bottle \\u2014 my initials S.L. are engraved on the bottom.\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -524,7 +524,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -560,7 +560,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -595,7 +595,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -631,7 +631,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -668,7 +668,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -683,7 +683,7 @@
                 "{{CLAIM_ID}}"
               ]
             },
-            "description": "Runs after approve on the same claim \u2014 final status will be 'rejected'. Skip if you want it to stay approved."
+            "description": "Runs after approve on the same claim — final status will be 'rejected'. Skip if you want it to stay approved."
           },
           "event": [
             {
@@ -701,7 +701,7 @@
     },
     {
       "name": "4. Report (/report -> report-svc:3003, admin only)",
-      "description": "Stateless service \u2014 aggregates from catalog-svc + claims-svc over pod-to-pod HTTP.",
+      "description": "Stateless service — aggregates from catalog-svc + claims-svc over pod-to-pod HTTP.",
       "item": [
         {
           "name": "4.1 Total Items",
@@ -711,7 +711,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -747,7 +747,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -783,7 +783,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -819,7 +819,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -861,7 +861,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -897,7 +897,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               },
               {
                 "key": "Content-Type",
@@ -918,7 +918,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Vireak (Updated)\"\n}",
+              "raw": "{\n  \"name\": \"Sokha Lim (Updated)\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -952,7 +952,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               },
               {
                 "key": "Content-Type",
@@ -973,7 +973,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"The k8s ingress fanout handles these claims really fast!\"\n}",
+              "raw": "{\n  \"message\": \"Recovered my water bottle within a day \\u2014 the claim process was painless!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1001,7 +1001,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -1033,7 +1033,7 @@
     },
     {
       "name": "7. Security tests (gateway MUST reject)",
-      "description": "Every request here must FAIL \u2014 proves the Ingress auth-url delegation to the api-gateway works.",
+      "description": "Every request here must FAIL — proves the Ingress auth-url delegation to the api-gateway works.",
       "item": [
         {
           "name": "T1 Wrong Password -> 401",
@@ -1058,7 +1058,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"vireak.dev@student.edu.kh\",\n  \"password\": \"wrong_password_attempt\"\n}",
+              "raw": "{\n  \"email\": \"sokha.lim@student.edu.kh\",\n  \"password\": \"definitely_not_it\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1150,7 +1150,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -1186,7 +1186,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -1222,7 +1222,7 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               },
               {
                 "key": "Content-Type",
@@ -1270,14 +1270,14 @@
       "description": "",
       "item": [
         {
-          "name": "8.1 LOAD BALANCING \u2014 run 5x",
+          "name": "8.1 LOAD BALANCING — run 5x",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{STUDENT_TOKEN}}",
-                "description": "JWT from student token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {
@@ -1305,14 +1305,14 @@
           ]
         },
         {
-          "name": "8.2 Delete Item (Admin) \u2014 cleanup",
+          "name": "8.2 Delete Item (Admin) — cleanup",
           "request": {
             "method": "DELETE",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{ADMIN_TOKEN}}",
-                "description": "JWT from admin token"
+                "description": "JWT captured by the auth folder"
               }
             ],
             "url": {

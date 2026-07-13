@@ -3,8 +3,6 @@ const Claim = require('../models/Claim');
 
 const router = express.Router();
 
-// GET /student/my-claims - Get own claims (student only)
-// Student role enforced upstream by the auth-svc validator (via Ingress); user ID arrives in the X-User-Id header
 router.get('/my-claims', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
@@ -15,7 +13,6 @@ router.get('/my-claims', async (req, res) => {
   }
 });
 
-// POST /student/submit-claim - Submit a claim (student only)
 router.post('/submit-claim', async (req, res) => {
   try {
     const { itemId, message } = req.body;

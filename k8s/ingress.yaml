@@ -2,23 +2,20 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: lostfound-public
-  # public route with no auth annotations
 spec:
-  ingressClassName: nginx                 # use the ingress-nginx controller
+  ingressClassName: nginx
   rules:
-    - host: lostfound.com                 
+    - host: lostfound.com
       http:
         paths:
-          # auth-svc mounts app.use('/auth', ...) with POST /register + POST /login,
-          # so the real login path is /auth/login (verified in auth-service/src).
-          - path: /auth/login             # Prefix: matches /auth/login and /auth/login/*
-            pathType: Prefix              # more specific than protected `/auth` -> wins the match
+          - path: /auth/login
+            pathType: Prefix
             backend:
               service:
-                name: auth-svc            # defined in k8s/Services/auth-svc.yaml
+                name: auth-svc
                 port:
-                  number: 3000            # Service port (== targetPort here; also named "http")
-          - path: /auth/register          # the real register path is /auth/register
+                  number: 3000
+          - path: /auth/register
             pathType: Prefix
             backend:
               service:
@@ -33,80 +30,59 @@ kind: Ingress
 metadata:
   name: lostfound-protected
   annotations:
-    # host form: <service>.<namespace>.svc.cluster.local:<port>, this is DNS resolution from K8s
-    # refer to the njs script from midterm
     nginx.ingress.kubernetes.io/auth-url: "http://api-gateway-svc.default.svc.cluster.local:80/auth-check"
-    # auth-method: HTTP verb for that subrequest. /auth-check is a GET.
     nginx.ingress.kubernetes.io/auth-method: "GET"
-    # auth-response-headers: identity headers auth-svc sets on its 2xx reply that
-    # ingress must copy onto the upstream request so backends can read the caller.
-    # (validate sets all three; drop X-User-Email here if no backend needs it.)
     nginx.ingress.kubernetes.io/auth-response-headers: "X-User-Id,X-User-Email,X-User-Role"
-    # NOTE: no rewrite-target — services now mount under their own prefix, so the
-    # full path is forwarded as-is (see the "PATH REWRITING: NOT NEEDED" note above).
 spec:
   ingressClassName: nginx
   rules:
-    - host: lostfound.com                 # SAME host as object 1 (single-domain fanout)
+    - host: lostfound.com
       http:
         paths:
-          # --- /auth: non-login auth routes ------------------------------------
-          # Less specific than /auth/login + /auth/register (object 1), so those
-          # stay public while the rest of /auth is gated here.
           - path: /auth
             pathType: Prefix
             backend:
               service:
-                name: auth-svc        
+                name: auth-svc
                 port:
                   number: 3000
 
-          # --- /catalog -> catalog-svc (Service load-balances across 2 replicas)
-          # Serves /catalog/items* (any role) and /catalog/admin/items* (admin).
           - path: /catalog
             pathType: Prefix
             backend:
               service:
-                name: catalog-svc        
+                name: catalog-svc
                 port:
                   number: 3001
 
-          # --- /claims -> claims-svc -------------------------------------------
-          # Serves /claims/:id (any role), /claims/student/* (student), /claims/admin/* (admin).
           - path: /claims
             pathType: Prefix
             backend:
               service:
-                name: claims-svc          # (file claim-svc.yaml, metadata.name claims-svc)
+                name: claims-svc
                 port:
                   number: 3002
 
-          # --- /report -> report-svc (may read the shared users DB — see secret)
-          # Serves /report/admin/* (admin only).
           - path: /report
             pathType: Prefix
             backend:
               service:
-                name: report-svc         
+                name: report-svc
                 port:
                   number: 3003
 
-          # --- /profile -> profile-svc -----------------------------------------
-          # Serves /profile/student/* (student only).
           - path: /profile
             pathType: Prefix
             backend:
               service:
-                name: profile-svc        
+                name: profile-svc
                 port:
                   number: 3004
 
-          # --- /feedback -> feedback-svc ---------------------------------------
-          # Serves /feedback/student/* (student) and /feedback/admin/* (admin).
           - path: /feedback
             pathType: Prefix
             backend:
               service:
-                name: feedback-svc       
+                name: feedback-svc
                 port:
                   number: 3005

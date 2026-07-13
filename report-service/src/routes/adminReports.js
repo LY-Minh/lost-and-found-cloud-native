@@ -3,13 +3,9 @@ const axios = require('axios');
 
 const router = express.Router();
 
-// Service-to-service base URLs. Defaults use the in-cluster Service DNS names
-// (k8s Services: catalog-svc:3001, claims-svc:3002). Override via env in the
-// report Deployment if the names/ports ever change.
 const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || 'http://catalog-svc:3001';
 const CLAIMS_SERVICE_URL = process.env.CLAIMS_SERVICE_URL || 'http://claims-svc:3002';
 
-// Helper to forward auth headers for internal service-to-service requests
 const getAuthHeaders = (req) => {
   return {
     'Authorization': req.headers.authorization || '',
@@ -19,7 +15,6 @@ const getAuthHeaders = (req) => {
   };
 };
 
-// GET /admin/total-items - Get total lost & found items
 router.get('/total-items', async (req, res) => {
   try {
     const response = await axios.get(`${CATALOG_SERVICE_URL}/catalog/items`, {
@@ -40,7 +35,6 @@ router.get('/total-items', async (req, res) => {
   }
 });
 
-// GET /admin/total-claims - Get total claim submissions
 router.get('/total-claims', async (req, res) => {
   try {
     const response = await axios.get(`${CLAIMS_SERVICE_URL}/claims/admin/claims`, {
@@ -56,7 +50,6 @@ router.get('/total-claims', async (req, res) => {
   }
 });
 
-// GET /admin/pending-claims - Get all pending claims
 router.get('/pending-claims', async (req, res) => {
   try {
     const response = await axios.get(`${CLAIMS_SERVICE_URL}/claims/admin/claims`, {
@@ -74,7 +67,6 @@ router.get('/pending-claims', async (req, res) => {
   }
 });
 
-// GET /admin/claims-by-status - Claims grouped by status
 router.get('/claims-by-status', async (req, res) => {
   try {
     const response = await axios.get(`${CLAIMS_SERVICE_URL}/claims/admin/claims`, {

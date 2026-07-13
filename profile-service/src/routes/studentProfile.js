@@ -3,8 +3,6 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// GET /student/me - Retrieve the logged-in student's profile
-// The auth-svc validator (via Ingress) validates the JWT and injects the X-User-Id header
 router.get('/me', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
@@ -23,8 +21,6 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// PUT /student/update - Update the logged-in student's profile (name only)
-// Password and role changes are intentionally blocked; use auth-service for those.
 router.put('/update', async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];

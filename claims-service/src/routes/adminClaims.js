@@ -3,8 +3,6 @@ const Claim = require('../models/Claim');
 
 const router = express.Router();
 
-// GET /admin/claims - Get all claims (admin only)
-// Admin role enforced upstream by the auth-svc validator (via Ingress)
 router.get('/claims', async (req, res) => {
   try {
     const claims = await Claim.find().sort({ createdAt: -1 });
@@ -14,7 +12,6 @@ router.get('/claims', async (req, res) => {
   }
 });
 
-// PUT /admin/approve-claim/:id - Approve a claim (admin only)
 router.put('/approve-claim/:id', async (req, res) => {
   try {
     const reviewedBy = req.headers['x-user-id'];
@@ -32,7 +29,6 @@ router.put('/approve-claim/:id', async (req, res) => {
   }
 });
 
-// PUT /admin/reject-claim/:id - Reject a claim (admin only)
 router.put('/reject-claim/:id', async (req, res) => {
   try {
     const reviewedBy = req.headers['x-user-id'];

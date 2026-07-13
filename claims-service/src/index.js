@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const claimRoutes = require('./routes/claims');
 const studentClaimRoutes = require('./routes/studentClaims');
 const adminClaimRoutes = require('./routes/adminClaims');
@@ -9,29 +11,34 @@ const app = express();
 const PORT = process.env.PORT || 3003;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/claims-db';
 
-// Middleware
+// Shared-volume request log: /app/logs is the shared-logs-pvc mount (PV).
+// The logger-pod reads this back (cat /logs/*.log).
+const LOG_DIR = process.env.LOG_DIR || '/app/logs';
+const LOG_FILE = path.join(LOG_DIR, 'claims.log');
+try { fs.mkdirSync(LOG_DIR, { recursive: true }); } catch (_) { /* local dev without the mount */ }
+
 app.use(cors());
 app.use(express.json());
 
-// Routes — all under the service prefix "/claims" (Ingress fans out by first
-// segment, no rewrite). Role is the 2nd segment, enforced by the auth-svc
-// validator. Register the role-specific routers BEFORE the catch-all "/claims"
-// router so /claims/admin/... and /claims/student/... aren't shadowed by /:id.
-// Student routes: /claims/student/... (validator enforces student role)
+// Append one line per request to the shared volume (best-effort — never crash on log failure)
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    const line = `${new Date().toISOString()} [claims] ${req.method} ${req.originalUrl} -> ${res.statusCode}\n`;
+    fs.appendFile(LOG_FILE, line, () => {});
+  });
+  next();
+});
+
 app.use('/claims/student', studentClaimRoutes);
 
-// Admin routes: /claims/admin/... (validator enforces admin role)
 app.use('/claims/admin', adminClaimRoutes);
 
-// Authenticated routes (any role): /claims/:id
 app.use('/claims', claimRoutes);
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'claims-service' });
 });
 
-// Connect to MongoDB and start server
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Claims Service connected to MongoDB');

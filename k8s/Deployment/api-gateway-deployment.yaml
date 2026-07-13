@@ -1,60 +1,51 @@
-# API GATEWAY (nginx + njs)
-# Auth validator for the Ingress: exposes GET /auth-check which verifies the
-# JWT + role (njs/auth.js). NOT a proxy — the Ingress does the path fanout.
-# Port: 80
-# Referenced by: the auth-url annotation in k8s/ingress.yaml
 apiVersion: apps/v1
 
 kind: Deployment
 
 metadata:
-  name: api-gateway-deployment      # Name of this Deployment
+  name: api-gateway-deployment
   labels:
-    app: api-gateway                # Label used to identify this deployment
+    app: api-gateway
 
 spec:
-  replicas: 1                       # A single validator is fine for single-node
+  replicas: 1
 
   selector:
     matchLabels:
-      app: api-gateway              # Tells Kubernetes which pods belong to this deployment
+      app: api-gateway
 
   template:
     metadata:
       labels:
-        app: api-gateway            # Applied to every pod created from this template
+        app: api-gateway
 
     spec:
       containers:
         - name: api-gateway-container
-          image: jinn2/lostfound-api-gateway:v1.0     # built+pushed by ./build-and-push.sh
+          image: jinn2/lostfound-api-gateway:v1.0
 
-          imagePullPolicy: IfNotPresent   # Only pulls image if not already cached locally
+          imagePullPolicy: IfNotPresent
 
           ports:
-            - containerPort: 80           # nginx listens on 80 (see api-gateway/nginx.conf)
+            - containerPort: 80
 
-          # JWT_SECRET MUST match the secret auth-svc signs tokens with, or the
-          # gateway can't verify them. Reuse the SAME Secret + key as auth.
           env:
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret            # same Secret auth-svc uses, so gateway + auth share JWT_SECRET
+                  name: auth-secret
                   key: JWT_SECRET
 
-          # Liveness probe — restarts container if nginx dies
           livenessProbe:
             httpGet:
-              path: /health                 # served by the nginx.conf /health location
+              path: /health
               port: 80
-            initialDelaySeconds: 10         # Wait 10s after startup before first check
-            periodSeconds: 10               # Repeat check every 10s
+            initialDelaySeconds: 10
+            periodSeconds: 10
 
-          # Readiness probe — only route auth checks once nginx is up
           readinessProbe:
             httpGet:
               path: /health
               port: 80
-            initialDelaySeconds: 5          # Wait 5s before first readiness check
-            periodSeconds: 5                # Repeat check every 5s
+            initialDelaySeconds: 5
+            periodSeconds: 5

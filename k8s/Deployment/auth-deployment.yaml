@@ -1,67 +1,60 @@
-# AUTH SERVICE
-# Handles user registration, login, and JWT token generation
-# Port: 3000
-# Ingress path: /auth
 apiVersion: apps/v1
 
 kind: Deployment
 
 metadata:
-  name: auth-deployment           # Name of this Deployment
+  name: auth-deployment
   labels:
-    app: auth                     # Label used to identify this deployment
+    app: auth
 
 spec:
-  replicas: 1                     # Only 1 pod — no load balancing needed for Auth
-  
+  replicas: 1
+
   selector:
     matchLabels:
-      app: auth                    # Tells Kubernetes which pods belong to this deployment
- 
+      app: auth
+
   template:
     metadata:
       labels:
-        app: auth                   # Applied to every pod created from this template
-   
+        app: auth
+
     spec:
       containers:
         - name: auth-container
-          image: jinn2/lostfound-auth-service:v1.0      # built+pushed by ./build-and-push.sh
-       
-          imagePullPolicy: IfNotPresent    # Only pulls image if not already cached locally
-        
+          image: jinn2/lostfound-auth-service:v1.0
+
+          imagePullPolicy: IfNotPresent
+
           ports:
-            - containerPort: 3000           # Port the app listens on inside the container
-      
-          # Environment variables from Kubernetes Secret
+            - containerPort: 3000
+
           env:
             - name: MONGO_URI
               valueFrom:
-                secretKeyRef:                 # Pulled securely from a Kubernetes Secret, not hardcoded
+                secretKeyRef:
                   name: auth-secret
                   key: MONGO_URI
-         
+
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: auth-secret
                   key: JWT_SECRET
-         
+
             - name: PORT
-              value: "3000"                   # Plain value since port isn't sensitive
-       
-          # Liveness probe — restarts container if app crashes
+              value: "3000"
+
           livenessProbe:
             httpGet:
-              path: /health                   # Health check endpoint the app must expose
+              path: /health
               port: 3000
-            initialDelaySeconds: 10           # Wait 10s after startup before first check
-            periodSeconds: 10                 # Repeat check every 10s
-        
-          # Readiness probe — only sends traffic when app is ready
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
           readinessProbe:
             httpGet:
               path: /health
               port: 3000
-            initialDelaySeconds: 5            # Wait 5s before first readiness check
-            periodSeconds: 5                  # Repeat check every 5s
+            initialDelaySeconds: 5
+            periodSeconds: 5

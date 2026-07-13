@@ -3,8 +3,6 @@ const Claim = require('../models/Claim');
 
 const router = express.Router();
 
-// GET /claims/:id - Get a claim by id (any authenticated user)
-// Token validated upstream by the auth-svc validator (via Ingress); any authenticated user, no role check needed
 router.get('/:id', async (req, res) => {
   try {
     const claim = await Claim.findById(req.params.id);

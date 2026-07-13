@@ -7,19 +7,15 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://mongo:27017/auth-db';
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use('/auth', authRoutes);
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'auth-service' });
 });
 
-// Connect to MongoDB and start server
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Auth Service connected to MongoDB');
